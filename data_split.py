@@ -4,7 +4,6 @@ IDs_Hem = np.zeros((len(ID_patient))) # binary vector over patients (0 = no hemo
 
 import glob 
 path =r'C:\YourFolder' #path to folder with .csv files
-all = glob.glob(path+'/*SI--Exp1*.csv')
 
 # iterate over patient
 for i, id in enumerate(ID_patient):
@@ -21,6 +20,9 @@ IDs_noHem = np.invert(IDs_hem_bool)
 # split data
 n_Hem = sum(IDs_Hem)
 n_noHem = len(ID_patient)-n_Hem
+
+IDs_Hem_patients = ID_patient[IDs_hem_bool]
+IDs_noHem_patients = ID_patient[IDs_hem_bool]
 
 split = [0.8,0.1,0.1]
 

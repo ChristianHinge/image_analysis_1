@@ -74,6 +74,9 @@ import datetime
 from dataloader_test import DataLoader, IDs
 import sys
 import numpy as np
+
+
+
 import os
 
 
@@ -167,7 +170,7 @@ for ii,s in enumerate(Y):
 #%%
 #batch_size, X_dim, Y_dim, n_channels = X_re.shape
 
-dl = DataLoder(IDs)
+dl = DataLoader(IDs)
 
 unet = Unet(512,512,2,32)
 Unet_model = unet.Unet_model
