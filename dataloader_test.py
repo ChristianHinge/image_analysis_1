@@ -4,69 +4,21 @@
 import numpy as np
 from PIL import Image
 from matplotlib import pyplot as plt
-
-data_dir = "data/Patients_CT"
-
-#%%
-#Slices for patient 67 for whom a segmentation image exists
-im_ids = [17,18,19,20,21]
-
-#Dataset dimensions
-X_dim = 650
-Y_dim = 650
-n_images = len(im_ids)
-n_channels = 2 
-
-
-#X: Images, Y: Masks
-
-#Dimensions in the datastructure
-#   Dimension 0: The different patients
-#   Dimension 1+2: 2D Image data
-#   Dimension 3: Channels (e.g. RGB channels or in our case, using both the "Bone" og "Brain" CT images)
-
-X = np.zeros((n_images,X_dim,Y_dim,n_channels))
-Y = np.zeros((n_images,X_dim,Y_dim))
-
-#Load dataset 
-for i, ID in enumerate(im_ids):
-
-    # Load bone and brain slice
-    im_bone  = Image.open(data_dir + "/067/bone/{}.jpg".format(ID))
-    im_brain = Image.open(data_dir + "/067/brain/{}.jpg".format(ID))
-
-    # Load segmentation mask
-    d = data_dir + "/067/brain/{}_HGE_Seg.jpg".format(ID)
-    if os.path.exists(d):
-        mask = np.array(Image.open(d))
-    else:
-        mask = np.zeros((X_dim,Y_dim))
-
-    # Save the images
-    X[i,:,:,0] = np.array(im_bone)
-    X[i,:,:,1] = np.array(im_brain)
-
-    Y[i,:,:] = mask
-
-
-#Show example
-plt.figure()
-plt.imshow(X[0,:,:,0])
-
-plt.figure()
-plt.imshow(Y[0,:,:])
-
-#%% Dataloader
 import tensorflow as tf
 from tensorflow.keras.utils import Sequence
+import os
 
-#Dataloader class based on TF
+#%% Dataloader
+
+
+#%%
+# Dataloader class based on TF
 class DataLoader(Sequence):
 
     def __init__(self,list_IDs,to_fit=True, 
     batch_size=32, dim=(650,650),n_channels=2,n_classes=2,shuffle=True,augmentation = None):
-        #Create the dataloader
 
+        #Create the dataloader
         self.list_IDs = list_IDs #list of patient IDs (1,2,3,4,5,...)
         self.to_fit = to_fit #True: dataloader used for training. False: dataloader used for test/val
         self.batch_size = batch_size #Size of bateches
@@ -87,7 +39,7 @@ class DataLoader(Sequence):
     # Is run at every epoch end. Randomizes order of dataset
     def on_epoch_end(self):
         self.indexes = np.arange(len(self.list_IDs))
-        if shuffle == True:
+        if self.shuffle == True:
             np.random.shuffle(self.indexes)
 
 
@@ -99,26 +51,29 @@ class DataLoader(Sequence):
 
         return self._load_batch(batch_IDs,load_Y=self.to_fit)
 
+
     # Function to load a batch, (apply augmentation), and return the batch
     # load_Y = False when doing testing/validation
     def _load_batch(self, IDs, load_Y = True):
-        
         # Initialize batch arrays
         X = np.zeros((len(IDs),*self.dim, self.n_channels))
         if load_Y:
             Y = np.zeros((len(IDs),*self.dim))
 
         for i, ID in enumerate(IDs):
-             # Load bone and brain slice
-            im_bone  = Image.open(self.data_dir + "/067/bone/{}.jpg".format(ID))
-            im_brain = Image.open(self.data_dir + "/067/brain/{}.jpg".format(ID))
+            pt = ID.split("_")[1]
+            sl = ID.split("_")[3]
 
+             # Load bone and brain slice
+            im_bone  = Image.open(self.data_dir + f"/{pt}/bone/{sl}.jpg")
+            im_brain = Image.open(self.data_dir + f"/{pt}/brain/{sl}.jpg")
+    
             X[i,:,:,0] = np.array(im_bone)
             X[i,:,:,1] = np.array(im_brain)
 
             # Load segmentation mask if training
             if load_Y:
-                seg_path = data_dir + "/067/brain/{}_HGE_Seg.jpg".format(ID)
+                seg_path = self.data_dir + f"/{pt}/brain/{sl}_HGE_Seg.jpg"
 
                 #Load image mask if it exists
                 if os.path.exists(seg_path):
@@ -128,12 +83,85 @@ class DataLoader(Sequence):
                 # Apply augmentation
                 if self.augmentation != None:
                     X, Y = self.augmentation(X, Y)
-                
-                # Return X and Y if training
-                return X, Y
-            
+
+        # Return X and Y if training
+        if load_Y:        
+            return X, Y
+        else:
             # Return X if not training
             return X
 
+
 #%%
+
+trainLoader = DataLoader(IDs,to_fit=True)
+i = 10
+X = trainLoader[0]
+
+#for i in range(32):
+#    plt.figure()
+#    plt.imshow(X[i,:,:,0])
+
+
+def preprocess(pt,sl):
+    """
+    123123
+    """
+
+    data_dir = "data/Patients_CT"
+    out_dir = "data/normalized"
+
+    im_bone = np.array(Image.open(data_dir + f"/{pt}/bone/{sl}.jpg"))
+    im_brain = np.array(Image.open(data_dir + f"/{pt}/brain/{sl}.jpg"))
+    seg_path = data_dir + f"/{pt}/brain/{sl}_HGE_Seg.jpg"
+
+    if os.path.exists(seg_path):
+        seg = np.array(Image.open(seg_path))
+    else:
+        seg = np.zeros(im_bone.shape)
+
+    path1 = out_dir+f"/{pt}/brain/"
+    path2 = out_dir+f"/{pt}/bone/"
+    path3 = out_dir+f"/{pt}/seg/"
+
+    if not os.path.exists(path1):
+        os.makedirs(path1)
+
+    if not os.path.exists(path2):
+        os.makedirs(path2)
+
+    if not os.path.exists(path3):
+        os.makedirs(path3)
+
+
+    im1 = normalize1(im_bone)
+    im2 = normalize1(im_brain)
+
+    np.save(path1+f"{sl}.npy",im1)
+    np.save(path2+f"{sl}.npy",im2)
+    np.save(path3+f"{sl}.npy",seg)
+
+def normalize1(im):
+    max_val = 255
+    X_AUG = im/max_val
+    return X_AUG
+
+def normalize2(im):
+    pass
+#%%
+
+ixs = list(range(49,131))
+IDs = []
+
+for i, ix in enumerate(ixs):
+
+    f = f"data/Patients_CT/{ix:03d}/bone"
+    n_slices = len(os.listdir(f))
+    IDs.extend([f"pt_{ix:03d}_sl_{i}" for i in range(1,n_slices+1)])
+#%%
+
+for ID in IDs:
+    pt = ID.split("_")[1]
+    sl = ID.split("_")[3]
+    preprocess(pt,sl)
 
