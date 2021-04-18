@@ -7,7 +7,6 @@ from matplotlib import pyplot as plt
 import tensorflow as tf
 from tensorflow.keras.utils import Sequence
 import os
-
 #%% Dataloader
 
 
@@ -20,17 +19,15 @@ class DataLoader(Sequence):
 
         #Create the dataloader
         self.list_IDs = list_IDs #list of patient IDs (1,2,3,4,5,...)
-        self.to_fit = to_fit #True: dataloader used for training. False: dataloader used for test/val
+        self.to_fit = to_fit     #True: dataloader used for training. False: dataloader used for test/val
         self.batch_size = batch_size #Size of bateches
-        self.dim = dim #Image dimension (650,650)
-        self.n_channels = n_channels #CHannels, 2: Brain, Bone
+        self.dim = dim           #Image dimension (650,650)
+        self.n_channels = n_channels #Channels, 2: Brain, Bone
         self.n_classes = n_classes #Number of classes in segmentation, 2: hemorrage, no hemorrage
         self.shuffle = shuffle #Randomize the order of the dataset
         self.augmentation = augmentation #Augmentation function used when training
         self.data_dir = "data/Patients_CT" #Data directory
-
         self.on_epoch_end()
-
 
     # Returns the length of the dataset in terms of number of batches
     def __len__(self):
@@ -94,18 +91,9 @@ class DataLoader(Sequence):
 
 #%%
 
-trainLoader = DataLoader(IDs,to_fit=True)
-i = 10
-X = trainLoader[0]
-
-#for i in range(32):
-#    plt.figure()
-#    plt.imshow(X[i,:,:,0])
-
-
 def preprocess(pt,sl):
     """
-    123123
+    preprocessing
     """
 
     data_dir = "data/Patients_CT"
@@ -133,7 +121,6 @@ def preprocess(pt,sl):
     if not os.path.exists(path3):
         os.makedirs(path3)
 
-
     im1 = normalize1(im_bone)
     im2 = normalize1(im_brain)
 
@@ -146,15 +133,14 @@ def normalize1(im):
     X_AUG = im/max_val
     return X_AUG
 
-def normalize2(im):
-    pass
+
+
 #%%
 
 ixs = list(range(49,131))
 IDs = []
 
 for i, ix in enumerate(ixs):
-
     f = f"data/Patients_CT/{ix:03d}/bone"
     n_slices = len(os.listdir(f))
     IDs.extend([f"pt_{ix:03d}_sl_{i}" for i in range(1,n_slices+1)])
@@ -164,4 +150,3 @@ for ID in IDs:
     pt = ID.split("_")[1]
     sl = ID.split("_")[3]
     preprocess(pt,sl)
-
