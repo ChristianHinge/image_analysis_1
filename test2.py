@@ -31,7 +31,7 @@ n_channels = 2
 X = np.zeros((n_images,X_dim,Y_dim,n_channels))
 Y = np.zeros((n_images,X_dim,Y_dim))
 
-#Load dataset 
+#Load dataset
 for i, ID in enumerate(im_ids):
 
     # Load bone and brain slice
@@ -97,7 +97,7 @@ def cv2_clipped_scale(img, scale_x, scale_y):
     return result
 
 
-def AUG(X,Y,angles,scales):
+def AUG(X,Y,angles = [-20,20],scales =[0.8,1.2]):
     # function can perform horizontal flip, rotation, scaling and normalization
     #
     # INPUT
@@ -149,7 +149,7 @@ def AUG(X,Y,angles,scales):
 #%% PERFORM AUGMENTATION
 
 # define augmentation variables
-angles = [-30, 30]      # range of angles as [angle_low, angle_high]
+angles = [-20, 20]      # range of angles as [angle_low, angle_high]
 scales = [0.8, 1.2]     # range of scaling as [scale_low, scale_high]
 
 # patient has been selected

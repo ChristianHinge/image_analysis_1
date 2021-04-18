@@ -71,6 +71,7 @@ from keras.layers.convolutional import UpSampling2D, Conv2D
 from keras.models import Sequential, Model
 from keras.optimizers import Adam
 import datetime
+
 import sys
 import numpy as np
 import os
@@ -97,7 +98,7 @@ class Unet():
               loss=tf.keras.losses.MeanSquaredError(),
               metrics=tf.keras.metrics.MeanSquaredError())
         
-        return self.Unet_model
+      #  return self.Unet_model
 
 
     def build_Unet(self):
@@ -124,6 +125,7 @@ class Unet():
 
         # Image input
         d0 = Input(shape=self.img_shape)
+
 
         # Downsampling
         d1 = conv2d(d0, self.gf, bn=False)
@@ -163,15 +165,21 @@ for ii,s in enumerate(Y):
 
 
 #%%
-batch_size, X_dim, Y_dim, n_channels = X_re.shape
+#batch_size, X_dim, Y_dim, n_channels = X_re.shape
 
-Unet_class = Unet(X_dim,Y_dim,n_channels,32)
 
-Unet_model = Unet_class.build_Unet() 
 
-Unet_model.compile(optimizer='adam',
-              loss=tf.keras.losses.MeanSquaredError(), metrics=tf.keras.metrics.MeanSquaredError())
+
+
+unet = Unet(512,512,2,32)
+Unet_model = unet.Unet_model
+Unet_model.fit(dl)
+
+#Unet_model.compile(optimizer='adam',
+#              loss=tf.keras.losses.MeanSquaredError(), metrics=tf.keras.metrics.MeanSquaredError())
 
 #y = Unet_model(X_re[:,:,:,:],training = False)
 
-Unet_model.fit(X_re,Y_re)
+
+
+

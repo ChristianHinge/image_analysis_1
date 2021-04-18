@@ -7,15 +7,22 @@ from matplotlib import pyplot as plt
 import tensorflow as tf
 from tensorflow.keras.utils import Sequence
 import os
+import cv2
+
 #%% Dataloader
 
 
 #%%
+
+
+#dataloader[0] #returnerer batch 1
+#len(dataloader) #returnerer antal observationer / batch_size
+
 # Dataloader class based on TF
 class DataLoader(Sequence):
 
     def __init__(self,list_IDs,to_fit=True, 
-    batch_size=32, dim=(650,650),n_channels=2,n_classes=2,shuffle=True,augmentation = None):
+    batch_size=32, dim=(512,512),n_channels=2,n_classes=2,shuffle=True,augmentation = None):
 
         #Create the dataloader
         self.list_IDs = list_IDs #list of patient IDs (1,2,3,4,5,...)
@@ -26,7 +33,7 @@ class DataLoader(Sequence):
         self.n_classes = n_classes #Number of classes in segmentation, 2: hemorrage, no hemorrage
         self.shuffle = shuffle #Randomize the order of the dataset
         self.augmentation = augmentation #Augmentation function used when training
-        self.data_dir = "data/Patients_CT" #Data directory
+        self.data_dir = "data/normalized" #Data directory
         self.on_epoch_end()
 
     # Returns the length of the dataset in terms of number of batches
@@ -62,24 +69,22 @@ class DataLoader(Sequence):
             sl = ID.split("_")[3]
 
              # Load bone and brain slice
-            im_bone  = Image.open(self.data_dir + f"/{pt}/bone/{sl}.jpg")
-            im_brain = Image.open(self.data_dir + f"/{pt}/brain/{sl}.jpg")
+            im_bone  = np.load(self.data_dir + f"/{pt}/bone/{sl}.npy")
+            im_brain = np.load(self.data_dir + f"/{pt}/brain/{sl}.npy")
     
-            X[i,:,:,0] = np.array(im_bone)
-            X[i,:,:,1] = np.array(im_brain)
+            X[i,:,:,0] = im_bone
+            X[i,:,:,1] = im_brain
 
             # Load segmentation mask if training
             if load_Y:
-                seg_path = self.data_dir + f"/{pt}/brain/{sl}_HGE_Seg.jpg"
-
-                #Load image mask if it exists
-                if os.path.exists(seg_path):
-                    seg = Image.open(seg_path)
-                    Y[i,:,:] = np.array(seg)
+                Y[i,:,:] = np.load(self.data_dir + f"/{pt}/seg/{sl}.npy")
 
                 # Apply augmentation
                 if self.augmentation != None:
-                    X, Y = self.augmentation(X, Y)
+                    for i in range(self.batch_size):
+                        X_, Y_ = self.augmentation(X[i,], Y[i,])
+                        X[i,] = X_
+                        Y[i,] = Y_
 
         # Return X and Y if training
         if load_Y:        
@@ -108,6 +113,10 @@ def preprocess(pt,sl):
     else:
         seg = np.zeros(im_bone.shape)
 
+    seg = cv2.resize(seg, (512,512), interpolation = cv2.INTER_CUBIC)
+    im_bone = cv2.resize(im_bone, (512,512), interpolation = cv2.INTER_CUBIC)
+    im_brain = cv2.resize(im_brain, (512,512), interpolation = cv2.INTER_CUBIC)
+
     path1 = out_dir+f"/{pt}/brain/"
     path2 = out_dir+f"/{pt}/bone/"
     path3 = out_dir+f"/{pt}/seg/"
@@ -123,15 +132,19 @@ def preprocess(pt,sl):
 
     im1 = normalize1(im_bone)
     im2 = normalize1(im_brain)
+    seg = normalize2(seg)
 
     np.save(path1+f"{sl}.npy",im1)
     np.save(path2+f"{sl}.npy",im2)
     np.save(path3+f"{sl}.npy",seg)
 
 def normalize1(im):
-    max_val = 255
-    X_AUG = im/max_val
-    return X_AUG
+    im2 = (im-im.mean())/np.std(im)
+    return im2
+
+def normalize2(im2):
+    im2 = im2 != 0
+    return im2
 
 
 
@@ -147,6 +160,20 @@ for i, ix in enumerate(ixs):
 #%%
 
 for ID in IDs:
+    print(ID)
     pt = ID.split("_")[1]
     sl = ID.split("_")[3]
     preprocess(pt,sl)
+
+# %%
+#testloader = DataLoader(list_IDs = test_ids)
+#trainloader = DataLoader(list_IDs = train_ids)
+#valloader = DataLoader(list_IDs = val_ids)
+dl = DataLoader(IDs)
+print(len(dl))
+dl[79]
+
+
+
+
+# %%
