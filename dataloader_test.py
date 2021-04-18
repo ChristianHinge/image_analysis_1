@@ -157,23 +157,12 @@ for i, ix in enumerate(ixs):
     f = f"data/Patients_CT/{ix:03d}/bone"
     n_slices = len(os.listdir(f))
     IDs.extend([f"pt_{ix:03d}_sl_{i}" for i in range(1,n_slices+1)])
-#%%
-
+#%%""
+"""
 for ID in IDs:
     print(ID)
     pt = ID.split("_")[1]
     sl = ID.split("_")[3]
     preprocess(pt,sl)
-
-# %%
-#testloader = DataLoader(list_IDs = test_ids)
-#trainloader = DataLoader(list_IDs = train_ids)
-#valloader = DataLoader(list_IDs = val_ids)
-dl = DataLoader(IDs)
-print(len(dl))
-dl[79]
-
-
-
-
+"""
 # %%

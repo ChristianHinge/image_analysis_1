@@ -71,7 +71,7 @@ from keras.layers.convolutional import UpSampling2D, Conv2D
 from keras.models import Sequential, Model
 from keras.optimizers import Adam
 import datetime
-
+from dataloader_test import DataLoader, IDs
 import sys
 import numpy as np
 import os
@@ -167,13 +167,11 @@ for ii,s in enumerate(Y):
 #%%
 #batch_size, X_dim, Y_dim, n_channels = X_re.shape
 
-
-
-
+dl = DataLoder(IDs)
 
 unet = Unet(512,512,2,32)
 Unet_model = unet.Unet_model
-Unet_model.fit(dl)
+#Unet_model.fit(dl)
 
 #Unet_model.compile(optimizer='adam',
 #              loss=tf.keras.losses.MeanSquaredError(), metrics=tf.keras.metrics.MeanSquaredError())
