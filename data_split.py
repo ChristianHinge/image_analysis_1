@@ -13,8 +13,8 @@ def get_data_split_IDs(patient_id_folder, split = [0.8,0.1,0.1]):
     
     for ids in ids_path:
         #print(ids)
-        ID = ids.split("\\")
-        ID_patient.append(ID[-1])
+        ID = os.path.basename(ids)[-1]
+        ID_patient.append(ID)
     
     ID_patient = np.array((ID_patient),dtype=int)
     

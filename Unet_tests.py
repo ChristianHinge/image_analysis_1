@@ -373,3 +373,6 @@ output1 = generator.predict(X_re[:,:,:,:])
 output=generator(X_re[:,:,:,:],training=False)
 
 
+#%%
+from data_split import get_data_split_IDs
+train_IDs,val_IDs,test_IDs = get_data_split_IDs("data/normalized")

@@ -1,67 +1,14 @@
-
+#%%
 
 import numpy as np
-from PIL import Image
+from PIL import Ima11ge
 from matplotlib import pyplot as plt
 import os 
-
-data_dir = "data/Patients_CT"
-
-#%%
-#Slices for patient 67 for whom a segmentation image exists
-im_ids = [17,18,19,20,21]
-
-#Dataset dimensions
-X_dim = 650
-Y_dim = 650
-n_images = len(im_ids)
-n_channels = 2 
-
-
-#X: Images, Y: Masks
-
-#Dimensions in the datastructure
-#   Dimension 0: The different patients
-#   Dimension 1+2: 2D Image data
-#   Dimension 3: Channels (e.g. RGB channels or in our case, using both the "Bone" og "Brain" CT images)
-
-X = np.zeros((n_images,X_dim,Y_dim,n_channels))
-Y = np.zeros((n_images,X_dim,Y_dim))
-
-#Load dataset 
-for i, ID in enumerate(im_ids):
-
-    # Load bone and brain slice
-    im_bone  = Image.open(data_dir + "/067/bone/{}.jpg".format(ID))
-    im_brain = Image.open(data_dir + "/067/brain/{}.jpg".format(ID))
-
-    # Load segmentation mask
-    d = data_dir + "/067/brain/{}_HGE_Seg.jpg".format(ID)
-    if os.path.exists(d):
-        mask = np.array(Image.open(d))
-    else:
-        mask = np.zeros((X_dim,Y_dim))
-
-    # Save the images
-    X[i,:,:,0] = np.array(im_bone)
-    X[i,:,:,1] = np.array(im_brain)
-
-    Y[i,:,:] = mask
-
-
-#Show example
-plt.figure()
-plt.imshow(X[0,:,:,0])
-
-plt.figure()
-plt.imshow(Y[0,:,:])
-
 
 #%% U-net 
 
 #from __future__ import print_function, division
 import scipy
-
 import tensorflow as tf
 from tensorflow import keras
 from keras.layers import Input, Dense, Reshape, Flatten, Dropout, Concatenate
@@ -74,9 +21,6 @@ import datetime
 from dataloader_test import DataLoader, IDs
 import sys
 import numpy as np
-
-
-
 import os
 
 
@@ -98,8 +42,8 @@ class Unet():
 
         # Compile model 
         self.Unet_model.compile(optimizer='adam',
-              loss=tf.keras.losses.MeanSquaredError(),
-              metrics=tf.keras.metrics.MeanSquaredError())
+              loss=tf.keras.losses.BinaryCrossentropy (),
+              metrics=tf.keras.metrics.BinaryCrossentropy ())
         
       #  return self.Unet_model
 
@@ -153,34 +97,16 @@ class Unet():
         return Model(d0, output_img)
 
 
-#%%
-import cv2
-
-X_re = np.zeros((5,512,512,2))
-Y_re = np.zeros((5,512,512))
-
-for ii,s in enumerate(X):
-    X_re[ii,:,:,:] = cv2.resize(s, (512,512), interpolation = cv2.INTER_CUBIC)
-
-for ii,s in enumerate(Y):
-    Y_re[ii,:,:] = cv2.resize(s, (512,512), interpolation = cv2.INTER_CUBIC)
-
-
 
 #%%
 #batch_size, X_dim, Y_dim, n_channels = X_re.shape
 
-dl = DataLoader(IDs)
+dl = DataLoader(IDs[:6],batch_size=2)
 
 unet = Unet(512,512,2,32)
 Unet_model = unet.Unet_model
-#Unet_model.fit(dl)
-
-#Unet_model.compile(optimizer='adam',
-#              loss=tf.keras.losses.MeanSquaredError(), metrics=tf.keras.metrics.MeanSquaredError())
-
-#y = Unet_model(X_re[:,:,:,:],training = False)
+#%%
+Unet_model.fit(dl,epochs=1)
 
 
-
-
+# %%

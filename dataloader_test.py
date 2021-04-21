@@ -11,10 +11,6 @@ import cv2
 
 #%% Dataloader
 
-
-#%%
-
-
 #dataloader[0] #returnerer batch 1
 #len(dataloader) #returnerer antal observationer / batch_size
 
