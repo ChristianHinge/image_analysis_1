@@ -3,7 +3,6 @@ import glob
 import numpy as np 
 import os 
 
-
 def get_data_split_IDs(IDs, split = [0.8,0.1,0.1]):
 
     patient_IDs = []

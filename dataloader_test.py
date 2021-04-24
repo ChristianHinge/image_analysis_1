@@ -8,6 +8,7 @@ import tensorflow as tf
 from tensorflow.keras.utils import Sequence
 import os
 import cv2
+import csv
 
 #%% Dataloader
 
@@ -99,7 +100,7 @@ class DataLoaderClassification(Sequence):
         self.list_IDs = list_IDs #list of patient IDs (1,2,3,4,5,...)
         self.to_fit = to_fit     #True: dataloader used for training. False: dataloader used for test/val
         self.batch_size = batch_size #Size of bateches
-        self.dim = dim           #Image dimension (650,650)
+        self.dim = dim    #Image dimension (650,650)
         self.n_channels = n_channels #Channels, 2: Brain, Bone
         self.n_classes = n_classes #Number of classes in segmentation, 6: intraventricular, intraparenchymal, subarachnoid, epidural, subdural, no hemorrhage
         self.shuffle = shuffle #Randomize the order of the dataset
@@ -107,7 +108,7 @@ class DataLoaderClassification(Sequence):
         self.data_dir = "data/normalized" #Data directory
         self.on_epoch_end()
 
-                # load hemorrhage diagnosis data
+        hem_data = []                # load hemorrhage diagnosis data
         with open('data/hemorrhage_diagnosis.csv', newline='') as File:  
             reader = csv.reader(File)
             for row in reader:
@@ -120,13 +121,14 @@ class DataLoaderClassification(Sequence):
 
         # remove fracture data (last column)
         hem_data = np.delete(hem_data,cols-1,1)
+        hem_data = hem_data[1:,:].astype(int)
         # we now have:
         # patient_ID, slice number, intraventricular, intraparenchymal, subarachnoid, epidural, subdural, no hemorrhage
 
         # update shape
         rows, cols = hem_data.shape
         self.hem_data = hem_data
-        self.Y_dim = self.cols
+        self.Y_dim = cols
 
     # Returns the length of the dataset in terms of number of batches
     def __len__(self):
@@ -153,7 +155,7 @@ class DataLoaderClassification(Sequence):
         # Initialize batch arrays
         X = np.zeros((len(IDs),*self.dim, self.n_channels))
         if load_Y:
-            Y = np.zeros((len(IDs),self.Y_dim))
+            Y = np.zeros((len(IDs),self.Y_dim-2))
 
         for i, ID in enumerate(IDs):
             pt = ID.split("_")[1]
@@ -168,7 +170,8 @@ class DataLoaderClassification(Sequence):
 
             # Load segmentation mask if training
             if load_Y:
-                Y[i,:] = self.hem_data[hem_data[:,0]==]
+                ix = (self.hem_data[:,0]==int(pt)) & (self.hem_data[:,1] == int(sl))
+                Y[i,:] = self.hem_data[ix,2:]
 
                 # Apply augmentation
                 if self.augmentation != None:
@@ -257,3 +260,11 @@ for ID in IDs:
     preprocess(pt,sl)
 """
 # %%
+
+
+def dice(mask_gt,mask_pred):
+    volume_sum = mask_gt.sum() + mask_pred.sum()
+    if volume_sum == 0:
+        return np.NaN
+    volume_intersect = (mask_gt & mask_pred).sum()
+    return 2*volume_intersect / volume_sum 
