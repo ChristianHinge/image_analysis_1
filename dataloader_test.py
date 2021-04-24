@@ -90,6 +90,101 @@ class DataLoader(Sequence):
             return X
 
 
+class DataLoaderClassification(Sequence):
+
+    def __init__(self,list_IDs,to_fit=True, 
+    batch_size=32, dim=(512,512),n_channels=2,n_classes=6,shuffle=True,augmentation = None):
+
+        #Create the dataloader
+        self.list_IDs = list_IDs #list of patient IDs (1,2,3,4,5,...)
+        self.to_fit = to_fit     #True: dataloader used for training. False: dataloader used for test/val
+        self.batch_size = batch_size #Size of bateches
+        self.dim = dim           #Image dimension (650,650)
+        self.n_channels = n_channels #Channels, 2: Brain, Bone
+        self.n_classes = n_classes #Number of classes in segmentation, 6: intraventricular, intraparenchymal, subarachnoid, epidural, subdural, no hemorrhage
+        self.shuffle = shuffle #Randomize the order of the dataset
+        self.augmentation = augmentation #Augmentation function used when training
+        self.data_dir = "data/normalized" #Data directory
+        self.on_epoch_end()
+
+                # load hemorrhage diagnosis data
+        with open('data/hemorrhage_diagnosis.csv', newline='') as File:  
+            reader = csv.reader(File)
+            for row in reader:
+                hem_data.append(np.array(row))
+
+
+        hem_data = np.array(hem_data)
+
+        rows, cols = hem_data.shape
+
+        # remove fracture data (last column)
+        hem_data = np.delete(hem_data,cols-1,1)
+        # we now have:
+        # patient_ID, slice number, intraventricular, intraparenchymal, subarachnoid, epidural, subdural, no hemorrhage
+
+        # update shape
+        rows, cols = hem_data.shape
+        self.hem_data = hem_data
+        self.Y_dim = self.cols
+
+    # Returns the length of the dataset in terms of number of batches
+    def __len__(self):
+        return len(self.list_IDs)//self.batch_size
+
+    # Is run at every epoch end. Randomizes order of dataset
+    def on_epoch_end(self):
+        self.indexes = np.arange(len(self.list_IDs))
+        if self.shuffle == True:
+            np.random.shuffle(self.indexes)
+
+
+    # Function to get a batch given a batch index
+    def __getitem__(self, index):
+        
+        indexes = self.indexes[index*self.batch_size:(index+1)*self.batch_size]
+        batch_IDs = [self.list_IDs[ix] for ix in indexes]
+
+        return self._load_batch(batch_IDs,load_Y=self.to_fit)
+
+    # Function to load a batch, (apply augmentation), and return the batch
+    # load_Y = False when doing testing/validation
+    def _load_batch(self, IDs, load_Y = True):
+        # Initialize batch arrays
+        X = np.zeros((len(IDs),*self.dim, self.n_channels))
+        if load_Y:
+            Y = np.zeros((len(IDs),self.Y_dim))
+
+        for i, ID in enumerate(IDs):
+            pt = ID.split("_")[1]
+            sl = ID.split("_")[3]
+
+             # Load bone and brain slice
+            im_bone  = np.load(self.data_dir + f"/{pt}/bone/{sl}.npy")
+            im_brain = np.load(self.data_dir + f"/{pt}/brain/{sl}.npy")
+    
+            X[i,:,:,0] = im_bone
+            X[i,:,:,1] = im_brain
+
+            # Load segmentation mask if training
+            if load_Y:
+                Y[i,:] = self.hem_data[hem_data[:,0]==]
+
+                # Apply augmentation
+                if self.augmentation != None:
+                    for i in range(self.batch_size):
+                        X_, Y_ = self.augmentation(X[i,], Y[i,])
+                        X[i,] = X_
+                        Y[i,] = Y_
+
+        # Return X and Y if training
+        if load_Y:        
+            return X, Y
+        else:
+            # Return X if not training
+            return X
+
+
 #%%
 
 def preprocess(pt,sl):
