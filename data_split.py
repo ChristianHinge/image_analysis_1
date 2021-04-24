@@ -3,7 +3,6 @@ import glob
 import numpy as np 
 import os 
 
-
 def get_data_split_IDs(IDs, split = [0.8,0.1,0.1]):
 
     patient_IDs = []
@@ -33,7 +32,8 @@ def get_data_split_IDs(IDs, split = [0.8,0.1,0.1]):
     # split data
     IDs_Hem_patients = ID_patient[IDs_Hem_bool]
     IDs_noHem_patients = ID_patient[IDs_noHem_bool]
-    
+    # print(IDs_Hem_patients)
+    # print(len(IDs_Hem_patients))
     
     #the actual splitting 
     IDs_Hem_train, IDs_Hem_val_test = train_test_split(IDs_Hem_patients, test_size=split[1]+split[2])
@@ -67,7 +67,9 @@ def get_data_split_IDs(IDs, split = [0.8,0.1,0.1]):
     return train_IDs, val_IDs, test_IDs
     
 
+# a,b,c = get_data_split_IDs(IDs)
 
+# print(val_IDs)
 
 # #%%
 # ID_patient = []

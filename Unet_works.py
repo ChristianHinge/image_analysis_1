@@ -1,5 +1,4 @@
 #%%
-
 import numpy as np
 from PIL import Image
 from matplotlib import pyplot as plt
@@ -111,94 +110,29 @@ import wandb
 from wandb.keras import WandbCallback
 from keras.callbacks import Callback
 
-def log_image(epoch, logs):
-    # Use the model to predict the values from the validation dataset.
-    test_pred_raw = Unet_model.predict(X_test)
-    test_pred = np.argmax(test_pred_raw, axis=1)
-    plt.figure(figsize=(10,3))
-    plt.subplot(1,4,1)
-    plt.imshow(X_test[0,:,:,0],cmap="gray")
-    plt.axis("off")
-    plt.title("Brain")
-    plt.subplot(1,4,2)
-    plt.imshow(X_test[0,:,:,1],cmap="gray")
-    plt.axis("off")
-    plt.title("Bone")
-    plt.subplot(1,4,3)
-    plt.imshow(test_pred_raw[0,:,:,0])
-    plt.axis("off")
-    plt.title("Predicted")
-    plt.subplot(1,4,4)
-    plt.imshow(Y_test[0,])
-    plt.axis("off")
-    plt.title("True")
-    plt.tight_layout()
-    # Log the confusion matrix as an image summary.
+# def log_image(epoch, logs):
+#     # Use the model to predict the values from the validation dataset.
+#     test_pred_raw = Unet_model.predict(X_test)
+#     test_pred = np.argmax(test_pred_raw, axis=1)
+#     plt.figure(figsize=(10,3))
+#     plt.subplot(1,4,1)
+#     plt.imshow(X_test[0,:,:,0],cmap="gray")
+#     plt.axis("off")
+#     plt.title("Brain")
+#     plt.subplot(1,4,2)
+#     plt.imshow(X_test[0,:,:,1],cmap="gray")
+#     plt.axis("off")
+#     plt.title("Bone")
+#     plt.subplot(1,4,3)
+#     plt.imshow(test_pred_raw[0,:,:,0])
+#     plt.axis("off")
+#     plt.title("Predicted")
+#     plt.subplot(1,4,4)
+#     plt.imshow(Y_test[0,])
+#     plt.axis("off")
+#     plt.title("True")
+#     plt.tight_layout()
+#     # Log the confusion matrix as an image summary.
 
-    wandb.log({"test:" : plt}, step=epoch)
-    #
-
-
-# Define the per-epoch callback.
-image_callback = keras.callbacks.LambdaCallback(on_epoch_end=log_image)
-
-with open("wandb.key" , "r") as handle:
-    wandb_key = handle.readlines()[0]
-
-wandb.login(key=wandb_key)
-wandb.init(project='unet', entity='keras_krigere')
-
-#batch_size, X_dim, Y_dim, n_channels = X_re.shape
-
-dl = DataLoader(IDs[:2],batch_size=2)
-
-X_test_, Y_test_ = dl[0]
-
-X_test = X_test_[np.newaxis,0,]
-Y_test = Y_test_[np.newaxis,0,]
-
-unet = Unet(512,512,2,32)
-Unet_model = unet.Unet_model
-
-
-def log_image(epoch, logs):
-    # Use the model to predict the values from the validation dataset.
-    test_pred_raw = Unet_model.predict(X_test)
-    test_pred = np.argmax(test_pred_raw, axis=1)
-    
-    plt.figure(figsize=(10,3))
-    plt.subplot(1,4,1)
-    plt.imshow(X_test[0,:,:,0],cmap="gray")
-    plt.axis("off")
-    plt.title("Brain")
-    plt.subplot(1,4,2)
-    plt.imshow(X_test[0,:,:,1],cmap="gray")
-    plt.axis("off")
-    plt.title("Bone")
-    plt.subplot(1,4,3)
-    plt.imshow(test_pred_raw[0,:,:,0])
-    plt.axis("off")
-    plt.title("Predicted")
-    plt.subplot(1,4,4)
-    plt.imshow(Y_test[0,])
-    plt.axis("off")
-    plt.title("True")
-    plt.tight_layout()
-    # Log the confusion matrix as an image summary.
-
-    wandb.log({"test:" : plt}, step=epoch)
-    #
-
-# Define the per-epoch callback.
-image_callback = keras.callbacks.LambdaCallback(on_epoch_end=log_image)
-
-#log_confusion_matrix(1,1)
-
-#%%
-
-Unet_model.fit(dl,epochs=10,
-    callbacks=[image_callback,WandbCallback()])
-
-
-Unet_model.save('path/to/location')
-
+#     wandb.log({"test:" : plt}, step=epoch)
+#     #
