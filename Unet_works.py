@@ -30,7 +30,47 @@ def dice_loss(y_true, y_pred):
 
   return 1 - numerator / denominator
 
-  
+
+def dice(mask_gt,mask_pred):
+    volume_sum = mask_gt.sum() + mask_pred.sum()
+    if volume_sum == 0:
+        return np.NaN
+    volume_intersect = (mask_gt & mask_pred).sum()
+    return 2*volume_intersect / volume_sum
+
+
+#tf.keras.backend
+
+# class dice_metric(keras.metrics.Metric):
+#     def __init__(self, name="dice_metric", **kwargs):
+#         super(dice_metric, self).__init__(name=name, **kwargs)
+#         self.dice = self.add_weight(name="dice", initializer="zeros")
+
+#     def update_state(self, y_true, y_pred, sample_weight=None):
+#         print(y_true.shape)
+#         print(y_pred.shape)
+#         y_pred = tf.reshape(tf.argmax(y_pred,axis=0), shape=(1,-1))
+#         # y_pred = tf.dtypes.cast(y_pred, tf.float32)
+#         # y_true = tf.dtypes.cast(y_true, tf.float32)
+
+#         #volume_sum = y_true.sum() + y_pred.sum()
+#         volume_sum = tf.math.reduce_sum(y_true) + tf.math.reduce_sum(y_pred)
+#         if volume_sum == 0:
+#             return np.NaN
+#         #volume_intersect = (y_true & y_pred).sum()
+#         volume_intersect = tf.math.reduce_sum(y_true & y_pred)
+#         self.dice.assign(2*volume_intersect / volume_sum)
+
+#     def result(self):
+#         return self.dice
+
+#     def reset_states(self):
+#         # The state of the metric will be reset at the start of each epoch.
+#         self.dice.assign(0.0)
+
+
+
+
 class Unet():
     def __init__(self,X_dim,Y_dim,n_channels,gf):
         # Input shape
@@ -46,23 +86,24 @@ class Unet():
 
         # Build the Unet
         self.Unet_model = self.build_Unet()
-
-        # Compile model 
-        self.Unet_model.compile(optimizer='adam',
-              loss=tf.keras.losses.BinaryCrossentropy (),
-              metrics=tf.keras.metrics.BinaryCrossentropy ())
         
-      #  return self.Unet_model
+        # Compile model 
+        self.Unet_model.compile(optimizer=optimizer,
+              loss=tf.keras.losses.BinaryCrossentropy (),
+              metrics=[tf.keras.metrics.BinaryCrossentropy ()] ) #dice_metric(), tf.keras.metrics.MeanIoU(num_classes=2)
+            
 
 
     def build_Unet(self):
         """U-Net"""
         initializer = tf.initializers.GlorotUniform()
         
-        def conv2d(layer_input, filters, f_size=4, bn=True):
+        def conv2d(layer_input, filters, f_size=4, bn=True, dropout_rate=0):
             """Layers used during downsampling"""
             d = Conv2D(filters, kernel_size=f_size, strides=2, padding='same',kernel_initializer=initializer,use_bias=True)(layer_input)
             d = LeakyReLU(alpha=0.2)(d)
+            if dropout_rate:
+                d = Dropout(dropout_rate)(d)
             if bn:
                 d = BatchNormalization(momentum=0.8)(d)
             return d
@@ -81,25 +122,43 @@ class Unet():
         d0 = Input(shape=self.img_shape)
 
 
+        # # Downsampling
+        # d1 = conv2d(d0, self.gf, bn=False)
+        # d2 = conv2d(d1, self.gf*2, dropout_rate=0.2)
+        # d3 = conv2d(d2, self.gf*4, dropout_rate=0.2)
+        # d4 = conv2d(d3, self.gf*8, dropout_rate=0.2)
+        # d5 = conv2d(d4, self.gf*8, dropout_rate=0.2)
+        # d6 = conv2d(d5, self.gf*8, dropout_rate=0.2)
+        # d7 = conv2d(d6, self.gf*8, dropout_rate=0.2)
+
+        # # Upsampling
+        # u1 = deconv2d(d7, d6, self.gf*8, dropout_rate=0.2)
+        # u2 = deconv2d(u1, d5, self.gf*8, dropout_rate=0.2)
+        # u3 = deconv2d(u2, d4, self.gf*8, dropout_rate=0.2)
+        # u4 = deconv2d(u3, d3, self.gf*4, dropout_rate=0.2)
+        # u5 = deconv2d(u4, d2, self.gf*2, dropout_rate=0.2)
+        # u6 = deconv2d(u5, d1, self.gf, dropout_rate=0.2)
+
+        # u7 = UpSampling2D(size=2)(u6)
+        # output_img = Conv2D(1, kernel_size=4, strides=1, padding='same', activation='sigmoid')(u7)
+
         # Downsampling
         d1 = conv2d(d0, self.gf, bn=False)
-        d2 = conv2d(d1, self.gf*2)
-        d3 = conv2d(d2, self.gf*4)
-        d4 = conv2d(d3, self.gf*8)
-        d5 = conv2d(d4, self.gf*8)
-        d6 = conv2d(d5, self.gf*8)
-        d7 = conv2d(d6, self.gf*8)
+        d2 = conv2d(d1, self.gf*2, dropout_rate=0.2)
+        d3 = conv2d(d2, self.gf*4, dropout_rate=0.2)
+        d4 = conv2d(d3, self.gf*8, dropout_rate=0.2)
+        d5 = conv2d(d4, self.gf*8, dropout_rate=0.2)
+
 
         # Upsampling
-        u1 = deconv2d(d7, d6, self.gf*8)
-        u2 = deconv2d(u1, d5, self.gf*8)
-        u3 = deconv2d(u2, d4, self.gf*8)
-        u4 = deconv2d(u3, d3, self.gf*4)
-        u5 = deconv2d(u4, d2, self.gf*2)
+        u3 = deconv2d(d5, d4, self.gf*8, dropout_rate=0.2)
+        u4 = deconv2d(u3, d3, self.gf*4, dropout_rate=0.2)
+        u5 = deconv2d(u4, d2, self.gf*2, dropout_rate=0.2)
         u6 = deconv2d(u5, d1, self.gf)
 
         u7 = UpSampling2D(size=2)(u6)
-        output_img = Conv2D(1, kernel_size=4, strides=1, padding='same', activation='tanh')(u7)
+        output_img = Conv2D(1, kernel_size=4, strides=1, padding='same', activation='sigmoid')(u7)
+
 
         return Model(d0, output_img)
 

@@ -78,6 +78,7 @@ class DataLoader(Sequence):
 
                 # Apply augmentation
                 if self.augmentation != None:
+                    
                     for i in range(self.batch_size):
                         X_, Y_ = self.augmentation(X[i,], Y[i,])
                         X[i,] = X_
@@ -233,7 +234,8 @@ def preprocess(pt,sl):
     np.save(path3+f"{sl}.npy",seg)
 
 def normalize1(im):
-    im2 = (im-im.mean())/np.std(im)
+    im2 = im / 255
+    #im2 = (im-im.mean())/np.std(im)
     return im2
 
 def normalize2(im2):
