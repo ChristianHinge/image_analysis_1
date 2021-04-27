@@ -70,7 +70,7 @@ wandb.init(project='unet', entity='keras_krigere')
 def log_image(epoch, logs):
     # Use the model to predict the values from the validation dataset.
     test_pred_raw = Unet_model.predict(X_test)
-    test_pred = np.argmax(test_pred_raw, axis=3)
+    test_pred = np.round(test_pred_raw)
     
     plt.figure(figsize=(10,6))
     plt.subplot(2,5,1)
@@ -85,6 +85,7 @@ def log_image(epoch, logs):
     plt.imshow(test_pred_raw[0,:,:,0])
     plt.axis("off")
     plt.title("Predicted")
+    plt.colorbar()
     plt.subplot(2,5,4)
     plt.imshow(test_pred[0,:,:])
     plt.axis("off")
@@ -99,7 +100,7 @@ def log_image(epoch, logs):
     
     # Use the model to predict the values from the training dataset.
     test_pred_raw_train = Unet_model.predict(X_train_test)
-    test_pred_train = np.argmax(test_pred_raw_train, axis=3)
+    test_pred_train = np.round(test_pred_raw_train)
     
     plt.subplot(2,5,6)
     plt.imshow(X_train_test[0,:,:,0],cmap="gray")
@@ -113,6 +114,7 @@ def log_image(epoch, logs):
     plt.imshow(test_pred_raw_train[0,:,:,0])
     plt.axis("off")
     plt.title("Predicted")
+    plt.colorbar()
     plt.subplot(2,5,9)
     plt.imshow(test_pred_train[0,:,:])
     plt.axis("off")
@@ -135,7 +137,7 @@ csv_logger = CSVLogger(cwd + '/training.log')
 
 #get training and validation data
 train_IDs, val_IDs, test_IDs = get_data_split_IDs(IDs)
-d_train = DataLoader(train_IDs[:30],batch_size = 2, augmentation = AUG) #len(train_IDs[:10])
+d_train = DataLoader(train_IDs,batch_size = 2, augmentation = AUG) #len(train_IDs[:10])
 d_val = DataLoader(val_IDs, batch_size = len(val_IDs)) 
 
 
@@ -184,6 +186,7 @@ BS = 2
 STEPS_PER_EPOCH = np.floor (len(train_IDs) / BS)
 print(STEPS_PER_EPOCH)
 SAVE_PERIOD = 10
+decay_steps = int(80 * STEPS_PER_EPOCH)
 
 cp_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_dir,
@@ -220,12 +223,14 @@ class Dice_metric(keras.callbacks.Callback):
         return self._data
 
 
+
 #define model
-unet = Unet(512,512,2,32)
+unet = Unet(512,512,2,32,decay_steps)
 Unet_model = unet.Unet_model
 
+
 #train model
-Unet_model.fit(d_train, batch_size = 2, epochs=100, callbacks = [image_callback,WandbCallback(),csv_logger, cp_callback], validation_data=(X_val,Y_val), validation_batch_size = 2)
+Unet_model.fit(d_train, batch_size = 2, epochs=120, callbacks = [image_callback,WandbCallback(),csv_logger, cp_callback], validation_data=(X_val,Y_val), validation_batch_size = 2)
 
 
 #Unet_model.save('checkpoints')

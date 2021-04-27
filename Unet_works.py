@@ -72,7 +72,7 @@ def dice(mask_gt,mask_pred):
 
 
 class Unet():
-    def __init__(self,X_dim,Y_dim,n_channels,gf):
+    def __init__(self,X_dim,Y_dim,n_channels,gf,decay_steps=1000000):
         # Input shape
         self.img_rows = X_dim
         self.img_cols = Y_dim
@@ -81,8 +81,13 @@ class Unet():
 
         # Number of filters in the first layer
         self.gf = gf
-
-        optimizer = Adam(0.0002, 0.5)
+        
+        lr_schedule = keras.optimizers.schedules.ExponentialDecay(
+                        initial_learning_rate=0.0001,
+                        decay_steps=decay_steps,
+                        decay_rate=0.2,staircase=True)
+        
+        optimizer = Adam(learning_rate=lr_schedule)
 
         # Build the Unet
         self.Unet_model = self.build_Unet()
@@ -142,13 +147,13 @@ class Unet():
         # u7 = UpSampling2D(size=2)(u6)
         # output_img = Conv2D(1, kernel_size=4, strides=1, padding='same', activation='sigmoid')(u7)
 
+
         # Downsampling
         d1 = conv2d(d0, self.gf, bn=False)
         d2 = conv2d(d1, self.gf*2, dropout_rate=0.2)
         d3 = conv2d(d2, self.gf*4, dropout_rate=0.2)
         d4 = conv2d(d3, self.gf*8, dropout_rate=0.2)
         d5 = conv2d(d4, self.gf*8, dropout_rate=0.2)
-
 
         # Upsampling
         u3 = deconv2d(d5, d4, self.gf*8, dropout_rate=0.2)
