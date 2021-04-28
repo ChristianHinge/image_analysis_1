@@ -170,7 +170,7 @@ class DataLoaderClassification(Sequence):
             X[i,:,:,0] = im_bone
             X[i,:,:,1] = im_brain
             X[i,:,:,2] = im_seg
-            
+
             # Load segmentation mask if training
             if load_Y:
                 ix = (self.hem_data[:,0]==int(pt)) & (self.hem_data[:,1] == int(sl))
@@ -179,9 +179,10 @@ class DataLoaderClassification(Sequence):
                 # Apply augmentation
                 if self.augmentation != None:
                     for i in range(self.batch_size):
-                        X_, Y_ = self.augmentation(X[i,], Y[i,])
-                        X[i,] = X_
-                        Y[i,] = Y_
+                        X_, X2_ = self.augmentation(X[i,:,:,:2], X[i,:,:,2])
+                        X[i,:,:,:2] = X_
+                        X[i,:,:,2] = X2_
+
 
         # Return X and Y if training
         if load_Y:        
