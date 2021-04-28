@@ -15,34 +15,6 @@ train_IDs, val_IDs, test_IDs = get_data_split_IDs(IDs)
 d_train = DataLoaderClassification(train_IDs,batch_size=2)
 X_ex,y_ex = d_train[0]
 
-#%% Augmentation
-# X_AUG, Y_AUG = AUG(X_slice,Y_slice,angles,scales)
-# Network
-
-model = tf.keras.Sequential([
-    tf.keras.Input(shape = (512,512,2)), # added
-    tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(1000, activation='relu'),
-    tf.keras.layers.Dense(6, activation='sigmoid') # dimension is now equal to number of classes (hemorrhage types)
-])
-
-model.compile(optimizer='adam',
-              loss='binary_crossentropy',
-              metrics=['accuracy'])
-
-
-#model.fit(d_train, epochs=10)
-
-#test_loss, test_acc = model.evaluate(test_images,  test_labels, verbose=2)
-#print('\nTest accuracy:', test_acc)
-
-# dont use softmax
-# probability_model = tf.keras.Sequential([model,tf.keras.layers.Softmax()])
-                                 
-#predictions = probability_model.predict(test_images)
-
-#%%
-
 from keras.models import Sequential
 from keras.layers import Dense, Conv2D, MaxPool2D , Flatten
 from keras.preprocessing.image import ImageDataGenerator
@@ -84,6 +56,6 @@ model.add(Dense(units=4096,activation="relu"))
 model.add(Dense(units=6, activation="sigmoid"))
 
 opt = Adam(lr=0.001)
-model.compile(optimizer=opt, loss=keras.losses.categorical_crossentropy, metrics=['accuracy'])
+model.compile(optimizer=opt, loss='binary_crossentropy', metrics=['accuracy'])
 
 model.fit(d_train)

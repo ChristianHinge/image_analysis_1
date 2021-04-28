@@ -68,7 +68,7 @@ class DataLoader(Sequence):
              # Load bone and brain slice
             im_bone  = np.load(self.data_dir + f"/{pt}/bone/{sl}.npy")
             im_brain = np.load(self.data_dir + f"/{pt}/brain/{sl}.npy")
-    
+
             X[i,:,:,0] = im_bone
             X[i,:,:,1] = im_brain
 
@@ -95,7 +95,7 @@ class DataLoader(Sequence):
 class DataLoaderClassification(Sequence):
 
     def __init__(self,list_IDs,to_fit=True, 
-    batch_size=32, dim=(512,512),n_channels=2,n_classes=6,shuffle=True,augmentation = None):
+    batch_size=32, dim=(512,512),n_channels=3,n_classes=6,shuffle=True,augmentation = None):
 
         #Create the dataloader
         self.list_IDs = list_IDs #list of patient IDs (1,2,3,4,5,...)
@@ -165,10 +165,12 @@ class DataLoaderClassification(Sequence):
              # Load bone and brain slice
             im_bone  = np.load(self.data_dir + f"/{pt}/bone/{sl}.npy")
             im_brain = np.load(self.data_dir + f"/{pt}/brain/{sl}.npy")
-    
+            im_seg = np.load(self.data_dir + f"/{pt}/seg/{sl}.npy")
+            
             X[i,:,:,0] = im_bone
             X[i,:,:,1] = im_brain
-
+            X[i,:,:,2] = im_seg
+            
             # Load segmentation mask if training
             if load_Y:
                 ix = (self.hem_data[:,0]==int(pt)) & (self.hem_data[:,1] == int(sl))

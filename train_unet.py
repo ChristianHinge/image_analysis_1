@@ -133,8 +133,6 @@ image_callback = keras.callbacks.LambdaCallback(on_epoch_end=log_image)
 
 csv_logger = CSVLogger(cwd + '/training.log')
 
-
-
 #get training and validation data
 train_IDs, val_IDs, test_IDs = get_data_split_IDs(IDs)
 d_train = DataLoader(train_IDs,batch_size = 2, augmentation = AUG) #len(train_IDs[:10])
