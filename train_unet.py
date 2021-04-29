@@ -149,13 +149,13 @@ image_callback = keras.callbacks.LambdaCallback(on_epoch_end=log_image)
 csv_logger = CSVLogger(cwd + '/training.log')
 
 
-
 #Create a callback that saves the model's weights every 10 epochs
 BS = 2
 STEPS_PER_EPOCH = np.floor (len(train_IDs) / BS)
 SAVE_MODEL_EPOCHS = 10
 DECAY_LR_EPOCHS = 80
 decay_steps = int(DECAY_LR_EPOCHS * STEPS_PER_EPOCH)
+
 
 cp_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_dir,
