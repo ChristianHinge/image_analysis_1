@@ -242,7 +242,7 @@ def normalize1(im):
     return im2
 
 def normalize2(im2):
-    im2 = im2 != 0
+    im2 = im2 > 100
     return im2
 
 
