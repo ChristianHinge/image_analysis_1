@@ -48,7 +48,7 @@ def cv2_clipped_scale(img, scale_x, scale_y):
     return result
 
 
-def AUG(X,Y,angles = [-20,20],scales =[0.8,1.2]):
+def AUG(X,Y,angles = [-15,15],scales =[0.9,1.1]):
 
     # function can perform horizontal flip, rotation, scaling and normalization
     #
