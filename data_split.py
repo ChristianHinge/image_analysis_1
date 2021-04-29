@@ -4,8 +4,23 @@ import numpy as np
 import os 
 #from dataloader_test import IDs
 
+def get_data_split_IDs():
 
-def get_data_split_IDs(IDs, split = [0.8,0.1,0.1]):
+    f = "data/"
+
+    with open(f+"train_ids.txt", "r") as handle:
+        train_ids = [x.strip() for x in handle.readlines()]
+    
+    with open(f+"val_ids.txt", "r") as handle:
+        val_ids = [x.strip() for x in handle.readlines()]
+
+    with open(f+"test_ids.txt", "r") as handle:
+        test_ids = [x.strip() for x in handle.readlines()]
+
+    return train_ids, val_ids, test_ids
+
+
+def make_data_split_IDs(IDs, split = [0.8,0.1,0.1]):
 
     patient_IDs = []
     
@@ -70,9 +85,18 @@ def get_data_split_IDs(IDs, split = [0.8,0.1,0.1]):
                 val_IDs.append(f'pt_{pt:03d}_sl_{s}')
             else:
                 test_IDs.append(f'pt_{pt:03d}_sl_{s}')
+    f = "data/"
 
-    return train_IDs, val_IDs, test_IDs
+    with open(f+"train_ids.txt", "w") as handle:
+        handle.writelines("\n".join(train_IDs))
     
+    with open(f+"val_ids.txt", "w") as handle:
+        handle.writelines("\n".join(val_IDs))
+
+    with open(f+"test_ids.txt", "w") as handle:
+        handle.writelines("\n".join(test_IDs))
+
+
 
 # a,b,c = get_data_split_IDs(IDs)
 

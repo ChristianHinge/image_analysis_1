@@ -171,7 +171,6 @@ Unet_model = unet.Unet_model
 #train model
 Unet_model.fit(d_train, batch_size = BS, epochs=120, callbacks = [image_callback, WandbCallback(), csv_logger, cp_callback, LR_callback], validation_data=(X_val,Y_val), validation_batch_size = BS)
 
-
 #Unet_model.save('checkpoints')
 
 

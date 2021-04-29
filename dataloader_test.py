@@ -269,9 +269,9 @@ for ID in IDs:
 """
 # %%
 
-def load_train_val_data(IDs):
+def load_train_val_data():
     #get training and validation data
-    train_IDs, val_IDs, test_IDs = get_data_split_IDs(IDs)
+    train_IDs, val_IDs, test_IDs = get_data_split_IDs()
     d_train = DataLoader(train_IDs,batch_size = 2, augmentation = AUG) #len(train_IDs[:10])
     d_val = DataLoader(val_IDs, batch_size = len(val_IDs)) 
     
@@ -300,6 +300,53 @@ def load_train_val_data(IDs):
         X_train, Y_train = d_train[i]
         pixel_val_sum = np.sum(np.sum(Y_train[0,:,:]))
         pixel_val_sum1 = np.sum(np.sum(Y_train[1,:,:]))# sum of Y_val image
+        #print('i='+str(i)+' and sum='+str(pixel_val_sum))
+        # find first Y_val image with sum greater than 0 (has a segmentation mask)
+        if pixel_val_sum > 0:
+            slice_show = 0 # save index value of first image with segmentation
+            break
+        elif pixel_val_sum1 > 0:
+            slice_show = 1
+            break 
+        i += 1
+    
+    # save data for image slice with segmentation
+    X_train_test = X_train[np.newaxis,slice_show,]
+    Y_train_test = Y_train[np.newaxis,slice_show,] 
+    
+    return train_IDs, val_IDs, test_IDs, d_train, X_val, Y_val, X_test, Y_test, X_train_test, Y_train_test
+
+
+def load_train_val_data_classifier():
+    #get training and validation data
+    train_IDs, val_IDs, test_IDs = get_data_split_IDs()
+    d_train = DataLoaderClassification(train_IDs,batch_size = 2, augmentation = AUG) #len(train_IDs[:10])
+    d_val = DataLoaderClassification(val_IDs, batch_size = len(val_IDs)) 
+    
+    
+    #get validation data
+    X_val, Y_val = d_val[0]
+    
+    #get a validation image with segmentation
+    for i in range(0,len(X_val)):
+        pixel_val_sum = np.sum(np.sum(X_val[i,:,:,2])) # sum of Y_val image
+        #print('i='+str(i)+' and sum='+str(pixel_val_sum))
+        # find first Y_val image with sum greater than 0 (has a segmentation mask)
+        if pixel_val_sum > 0:
+            slice_show = i # save index value of first image with segmentation
+            break
+    
+    # save data for image slice with segmentation
+    X_test = X_val[np.newaxis,slice_show,]
+    Y_test = Y_val[np.newaxis,slice_show,]   
+    
+    
+    #get training image with segmentation
+    i = 0
+    while True:
+        X_train, Y_train = d_train[i]
+        pixel_val_sum = np.sum(np.sum(X_train[0,:,:,2]))
+        pixel_val_sum1 = np.sum(np.sum(X_train[1,:,:,2]))# sum of Y_val image
         #print('i='+str(i)+' and sum='+str(pixel_val_sum))
         # find first Y_val image with sum greater than 0 (has a segmentation mask)
         if pixel_val_sum > 0:
