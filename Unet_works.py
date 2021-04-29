@@ -21,45 +21,29 @@ from dataloader_test import DataLoader, IDs
 import sys
 import numpy as np
 import os
-
-def dice_loss(y_true, y_pred):
-  y_true = tf.cast(y_true, tf.float32)
-  y_pred = tf.math.sigmoid(y_pred)
-  numerator = 2 * tf.reduce_sum(y_true * y_pred)
-  denominator = tf.reduce_sum(y_true + y_pred)
-
-  return 1 - numerator / denominator
+from keras import backend as K
 
 
-def dice(mask_gt,mask_pred):
-    volume_sum = mask_gt.sum() + mask_pred.sum()
-    if volume_sum == 0:
-        return np.NaN
-    volume_intersect = (mask_gt & mask_pred).sum()
-    return 2*volume_intersect / volume_sum
-
-
-#tf.keras.backend
 
 # class dice_metric(keras.metrics.Metric):
 #     def __init__(self, name="dice_metric", **kwargs):
 #         super(dice_metric, self).__init__(name=name, **kwargs)
 #         self.dice = self.add_weight(name="dice", initializer="zeros")
 
-#     def update_state(self, y_true, y_pred, sample_weight=None):
-#         print(y_true.shape)
-#         print(y_pred.shape)
-#         y_pred = tf.reshape(tf.argmax(y_pred,axis=0), shape=(1,-1))
-#         # y_pred = tf.dtypes.cast(y_pred, tf.float32)
-#         # y_true = tf.dtypes.cast(y_true, tf.float32)
-
-#         #volume_sum = y_true.sum() + y_pred.sum()
-#         volume_sum = tf.math.reduce_sum(y_true) + tf.math.reduce_sum(y_pred)
-#         if volume_sum == 0:
-#             return np.NaN
-#         #volume_intersect = (y_true & y_pred).sum()
-#         volume_intersect = tf.math.reduce_sum(y_true & y_pred)
-#         self.dice.assign(2*volume_intersect / volume_sum)
+#     def update_state(self, y_true, y_pred, sample_weight=None, smooth=1):
+        
+#         y_true_r = K.expand_dims(y_true,axis=-1)
+#         y_pred_r = K.round(y_pred)
+        
+#         y_true_f = K.flatten(y_true_r)
+#         y_pred_f = K.flatten(y_pred_r)
+#         intersection = K.sum(y_true_f * y_pred_f)
+                
+#         tf.print(K.sum(y_true_f))
+#         tf.print(K.sum(y_pred_f))
+#         tf.print(intersection)
+        
+#         self.dice.assign((2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth))
 
 #     def result(self):
 #         return self.dice
@@ -67,7 +51,7 @@ def dice(mask_gt,mask_pred):
 #     def reset_states(self):
 #         # The state of the metric will be reset at the start of each epoch.
 #         self.dice.assign(0.0)
-
+        
 
 
 
@@ -82,13 +66,15 @@ class Unet():
         # Number of filters in the first layer
         self.gf = gf
         
-        lr_schedule = keras.optimizers.schedules.ExponentialDecay(
-                        initial_learning_rate=0.0001,
-                        decay_steps=decay_steps,
-                        decay_rate=0.2,staircase=True)
+        # lr_schedule = keras.optimizers.schedules.ExponentialDecay(
+        #                 initial_learning_rate=0.0001,
+        #                 decay_steps=decay_steps,
+        #                 decay_rate=0.2,staircase=True)
         
-        optimizer = Adam(learning_rate=lr_schedule)
-
+        # optimizer = Adam(learning_rate=lr_schedule)
+        
+        optimizer = Adam(learning_rate=0.0001)
+        
         # Build the Unet
         self.Unet_model = self.build_Unet()
         
@@ -170,36 +156,36 @@ class Unet():
 
 #%%
 
-import wandb
-from wandb.keras import WandbCallback
-from keras.callbacks import Callback
+# import wandb
+# from wandb.keras import WandbCallback
+# from keras.callbacks import Callback
 
-def log_image(epoch, logs):
-    # Use the model to predict the values from the validation dataset.
-    test_pred_raw = Unet_model.predict(X_test)
-    test_pred = np.argmax(test_pred_raw, axis=1)
-    plt.figure(figsize=(10,3))
-    plt.subplot(1,4,1)
-    plt.imshow(X_test[0,:,:,0],cmap="gray")
-    plt.axis("off")
-    plt.title("Brain")
-    plt.subplot(1,4,2)
-    plt.imshow(X_test[0,:,:,1],cmap="gray")
-    plt.axis("off")
-    plt.title("Bone")
-    plt.subplot(1,4,3)
-    plt.imshow(test_pred_raw[0,:,:,0])
-    plt.axis("off")
-    plt.title("Predicted")
-    plt.subplot(1,4,4)
-    plt.imshow(Y_test[0,])
-    plt.axis("off")
-    plt.title("True")
-    plt.tight_layout()
-    # Log the confusion matrix as an image summary.
+# def log_image(epoch, logs):
+#     # Use the model to predict the values from the validation dataset.
+#     test_pred_raw = Unet_model.predict(X_test)
+#     test_pred = np.argmax(test_pred_raw, axis=1)
+#     plt.figure(figsize=(10,3))
+#     plt.subplot(1,4,1)
+#     plt.imshow(X_test[0,:,:,0],cmap="gray")
+#     plt.axis("off")
+#     plt.title("Brain")
+#     plt.subplot(1,4,2)
+#     plt.imshow(X_test[0,:,:,1],cmap="gray")
+#     plt.axis("off")
+#     plt.title("Bone")
+#     plt.subplot(1,4,3)
+#     plt.imshow(test_pred_raw[0,:,:,0])
+#     plt.axis("off")
+#     plt.title("Predicted")
+#     plt.subplot(1,4,4)
+#     plt.imshow(Y_test[0,])
+#     plt.axis("off")
+#     plt.title("True")
+#     plt.tight_layout()
+#     # Log the confusion matrix as an image summary.
 
-    wandb.log({"test:" : plt}, step=epoch)
-    #
+#     wandb.log({"test:" : plt}, step=epoch)
+#     #
 
 """
 # Define the per-epoch callback.
