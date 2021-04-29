@@ -58,7 +58,7 @@ if not os.path.exists(cwd + norm_dir):
 
 #%%
 
-train_IDs, val_IDs, test_IDs, d_train, X_val, Y_val, X_test, Y_test, X_train_test, Y_train_test = load_train_val_data(IDs)
+train_IDs, val_IDs, test_IDs, d_train, X_val, Y_val, X_test, Y_test, X_train_test, Y_train_test = load_train_val_data()
 
 
 #set up wandb

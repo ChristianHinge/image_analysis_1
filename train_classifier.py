@@ -1,8 +1,6 @@
 # CLASSIFICATION
 
-#%%
-%reload_ext autoreload
-%autoreload 2
+
 import numpy as np
 from matplotlib import pyplot as plt
 import wandb
@@ -12,24 +10,18 @@ from dataloader_test import DataLoaderClassification, IDs, preprocess
 from data_split import get_data_split_IDs
 from test2 import AUG
 import tensorflow as tf
+from train_unet import load_train_val_data_classifier
+
+from keras.models import Sequential
+from keras.layers import Dense, Conv2D, MaxPool2D , Flatten
+from keras.preprocessing.image import ImageDataGenerator
+from keras.optimizers import Adam
 #%% Load data
-
-# does not work
-train_IDs, val_IDs, test_IDs = get_data_split_IDs(IDs)
-d_train = DataLoaderClassification(train_IDs,batch_size=8)
-d_val = DataLoaderClassification(val_IDs, batch_size = 10) 
-
-#get validation data
-X_ex,y_ex = d_train[0]
-X_val, Y_val = d_val[0]
-X_test = X_val[np.newaxis,0,]
-Y_test = Y_val[np.newaxis,0,]   
-
-X_train_test = X_ex[np.newaxis,0,]
-Y_train_test = y_ex[np.newaxis,0,]    
 
 diagnosis = ["Intraventricular","Intraparenchymal","Subarachnoid","Epidural","Subdural","No_Hemorrhage"]
 diagnosis_dict = {i:x for x,i in zip(diagnosis,range(len(diagnosis)))}
+
+train_IDs, val_IDs, test_IDs, d_train, X_val, Y_val, X_test, Y_test, X_train_test, Y_train_test = load_train_val_data_classifier()
 
 # Define the per-epoch callbacks
 def log_image(epoch, logs):
@@ -78,10 +70,7 @@ def log_image(epoch, logs):
     print(s)
     wandb.log({"im": plt})
 
-from keras.models import Sequential
-from keras.layers import Dense, Conv2D, MaxPool2D , Flatten
-from keras.preprocessing.image import ImageDataGenerator
-from keras.optimizers import Adam
+
 
 #VGG 16 with some modifications
 model = Sequential()
