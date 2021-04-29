@@ -2,7 +2,7 @@
 import numpy as np
 from PIL import Image
 from matplotlib import pyplot as plt
-import os 
+import os
 
 #%% U-net 
 
@@ -96,8 +96,7 @@ class Unet():
         self.Unet_model.compile(optimizer=optimizer,
               loss=tf.keras.losses.BinaryCrossentropy (),
               metrics=[tf.keras.metrics.BinaryCrossentropy ()] ) #dice_metric(), tf.keras.metrics.MeanIoU(num_classes=2)
-            
-
+        
 
     def build_Unet(self):
         """U-Net"""
