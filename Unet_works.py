@@ -136,15 +136,15 @@ class Unet():
         # Downsampling
         d1 = conv2d(d0, self.gf, bn=False)
         d2 = conv2d(d1, self.gf*2, dropout_rate=0.2)
-        d3 = conv2d(d2, self.gf*4, dropout_rate=0.2)
-        d4 = conv2d(d3, self.gf*8, dropout_rate=0.2)
-        d5 = conv2d(d4, self.gf*8, dropout_rate=0.2)
+        d3 = conv2d(d2, self.gf*4, dropout_rate=0.3)
+        d4 = conv2d(d3, self.gf*8, dropout_rate=0.4)
+        d5 = conv2d(d4, self.gf*8, dropout_rate=0.5)
 
         # Upsampling
-        u3 = deconv2d(d5, d4, self.gf*8, dropout_rate=0.2)
-        u4 = deconv2d(u3, d3, self.gf*4, dropout_rate=0.2)
-        u5 = deconv2d(u4, d2, self.gf*2, dropout_rate=0.2)
-        u6 = deconv2d(u5, d1, self.gf)
+        u3 = deconv2d(d5, d4, self.gf*8, dropout_rate=0.5)
+        u4 = deconv2d(u3, d3, self.gf*4, dropout_rate=0.4)
+        u5 = deconv2d(u4, d2, self.gf*2, dropout_rate=0.3)
+        u6 = deconv2d(u5, d1, self.gf, dropout_rate=0.2)
 
         u7 = UpSampling2D(size=2)(u6)
         output_img = Conv2D(1, kernel_size=4, strides=1, padding='same', activation='sigmoid')(u7)

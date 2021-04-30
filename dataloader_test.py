@@ -218,8 +218,8 @@ def preprocess(pt,sl):
     im_bone = cv2.resize(im_bone, (512,512), interpolation = cv2.INTER_CUBIC)
     im_brain = cv2.resize(im_brain, (512,512), interpolation = cv2.INTER_CUBIC)
 
-    path1 = out_dir+f"/{pt}/brain/"
-    path2 = out_dir+f"/{pt}/bone/"
+    path1 = out_dir+f"/{pt}/bone/"
+    path2 = out_dir+f"/{pt}/brain/"
     path3 = out_dir+f"/{pt}/seg/"
 
     if not os.path.exists(path1):

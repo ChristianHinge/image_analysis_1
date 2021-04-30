@@ -28,12 +28,10 @@ print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('
 
 #%%
 
-model_path = "checkpoints/first low LR model/model_120.hdf5"
+model_path = "checkpoints/0.1_step_decay_LR/model_120.hdf5"
 
-train_IDs, val_IDs, test_IDs, d_train, X_val, Y_val_true, X_test, Y_test, X_train_test, Y_train_test = load_train_val_data(IDs)
+train_IDs, val_IDs, test_IDs, d_train, X_val, Y_val_true, X_test, Y_test, X_train_test, Y_train_test = load_train_val_data()
 
-print(val_IDs)
-print(len(val_IDs))
 
 #%%
 
@@ -106,7 +104,7 @@ for b in range(1):#int(Y_val_true.shape[0]/BS)):
     DSC.append(DSC_batch)
     IoU.append(IoU_batch)
     
-    
+
 print(np.array(DSC).mean())
 print(np.array(IoU).mean())
 
