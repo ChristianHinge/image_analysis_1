@@ -125,10 +125,14 @@ class DataLoaderClassification(Sequence):
 
         # remove fracture data (last column)
         hem_data = np.delete(hem_data,cols-1,1)
+        # remove labels
         hem_data = hem_data[1:,:].astype(int)
         # we now have:
         # patient_ID, slice number, intraventricular, intraparenchymal, subarachnoid, epidural, subdural, no hemorrhage
-
+        
+        # remove row 1098 - error
+        hem_data = np.delete(hem_data,1098,0)
+        
         # update shape
         rows, cols = hem_data.shape
         self.hem_data = hem_data
