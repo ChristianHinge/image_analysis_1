@@ -56,6 +56,13 @@ if not os.path.exists(cwd + norm_dir):
         sl = ID.split("_")[3]
         preprocess(pt,sl)
 
+#%%
+
+for ID in IDs:
+    print(ID)
+    pt = ID.split("_")[1]
+    sl = ID.split("_")[3]
+    preprocess(pt,sl)
 
 #%%
 

@@ -86,7 +86,7 @@ class Unet():
 
     def build_Unet(self):
         """U-Net"""
-        initializer = tf.initializers.GlorotUniform()
+        initializer = tf.initializers.HeUniform()
         
         def conv2d(layer_input, filters, f_size=4, bn=True, dropout_rate=0):
             """Layers used during downsampling"""

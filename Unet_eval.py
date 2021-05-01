@@ -29,16 +29,17 @@ print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('
 
 #%%
 
-model_path = "checkpoints/model_120.hdf5"
+#model_path = "checkpoints/model_120.hdf5"
 #model_path = "Final_model"
-#model_path = "checkpoints/first low LR model/model_120.hdf5"
+model_path = "checkpoints/first low LR model/model_120.hdf5"
 #model_path = "checkpoints/0.1_step_decay_LR/model_120.hdf5"
 
-train_IDs, val_IDs, test_IDs, d_train, X_val, Y_val_true, X_test, Y_test, X_train_test, Y_train_test, X_test, Y_test = load_train_val_data()
+train_IDs, val_IDs, test_IDs, d_train, X_val, Y_val, X_val_test, Y_val_test, X_train_test, Y_train_test, X_test, Y_test = load_train_val_data()
 
 eval_IDs = test_IDs
 X_eval = X_test
 Y_eval_true = Y_test
+
 
 #%%
 data_dir = "data/normalized"
@@ -52,8 +53,8 @@ for i, ID in enumerate(eval_IDs):
     sl = ID.split("_")[3]
 
       # Load bone and brain slice
-    im_bone  = np.load(data_dir + f"/{pt}/bone/{sl}.npy")
-    im_brain = np.load(data_dir + f"/{pt}/brain/{sl}.npy")
+    im_bone  = np.load(data_dir + f"/{pt}/brain/{sl}.npy")
+    im_brain = np.load(data_dir + f"/{pt}/bone/{sl}.npy")
     im_seg = np.load(data_dir + f"/{pt}/seg/{sl}.npy")
     
     X_eval_imgs[i,:,:,0] = im_bone
@@ -84,30 +85,22 @@ X_eval_imgs_hem = X_eval_imgs[eval_IDs_hem_bool,:,:,:]
 Y_eval_imgs_hem = Y_eval_imgs[eval_IDs_hem_bool,:,:]
 
 #%% 
-
-# # model_path = "checkpoints/test"
-# # model_path = "checkpoints/model_02.h5"
-
-
-# Unet_model = load_model(model_path)
-
-# #Unet_model = tf.saved_model.load(model_path)
-
-# # unet = Unet(512,512,2,32,decay_steps=100000)
-# # Unet_model = unet.Unet_model
-# # Unet_model.load_weights(model_path)
-# Y_eval_pred = Unet_model.predict(X_eval_imgs_hem,batch_size=BS).squeeze()
-
-
-#model_path = "checkpoints/first low LR model/model_10.hdf5"
-#model_path = "checkpoints/0.1_step_decay_LR/model_120.hdf5"
-
 BS = 2
 
 #load model and make prediction 
 Unet_model = load_model(model_path)
 
+#Y_eval_pred_imgs = np.round(Unet_model.predict(X_eval_imgs,batch_size=BS).squeeze())
 Y_eval_pred = np.round(Unet_model.predict(X_eval,batch_size=BS).squeeze())
+
+idx = 22
+
+plt.subplot(2,3,4)
+plt.imshow(X_test[idx,:,:,1])
+plt.subplot(2,3,5)
+plt.imshow(Y_test[idx,:,:])
+plt.subplot(2,3,6)
+plt.imshow(Y_eval_pred[idx,:,:])
 
 
 #%% ONLY hemorrhage slices from validation
@@ -118,19 +111,17 @@ Y_eval_pred_hem = np.round(Unet_model.predict(X_eval_imgs_hem,batch_size=BS).squ
 
 Y_eval_true_hem = Y_eval_imgs_hem
 
-
 #%%
-
-
-idx = -1
+idx = 7
 
 plt.figure(figsize=(10,6))
 plt.subplot(1,3,1)
-plt.imshow(X_eval[idx,:,:,1])
+plt.imshow(X_eval_imgs_hem[idx,:,:,0])
 plt.subplot(1,3,2)
-plt.imshow(Y_eval_true[idx,:,:])
+plt.imshow(Y_eval_true_hem[idx,:,:])
 plt.subplot(1,3,3)
-plt.imshow(Y_eval_pred[idx,:,:])
+plt.imshow(Y_eval_pred_hem[idx,:,:])
+
 
 #%%
 
@@ -187,8 +178,8 @@ for b in range(int(Y_eval_true.shape[0]/BS)):
     DSC_batch = dice_coef(tf.convert_to_tensor(Y_eval_true_batch), tf.convert_to_tensor(Y_eval_pred_batch))
     IoU_batch = IoU_coef(tf.convert_to_tensor(Y_eval_true_batch), tf.convert_to_tensor(Y_eval_pred_batch))
     
-    tf.print(DSC_batch)
-    tf.print(IoU_batch)
+    # tf.print(DSC_batch)
+    # tf.print(IoU_batch)
     
     DSC.append(DSC_batch)
     IoU.append(IoU_batch)
@@ -198,6 +189,7 @@ print('Mean Dice: {0}'.format(np.array(DSC).mean()))
 print('Mean IoU: {0}'.format(np.array(IoU).mean()))
 
 
+#%%
 
 DSC_hem = []
 IoU_hem = []
