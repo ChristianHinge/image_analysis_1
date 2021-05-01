@@ -26,9 +26,7 @@ train_IDs, val_IDs, test_IDs, d_train, X_val, Y_val, X_test, Y_test, X_train_tes
 # Define the per-epoch callbacks
 def log_image(epoch, logs):
     # Use the model to predict the values from the validation dataset.
-    ix = random.randrange(10)
-    X_test = X_val[np.newaxis,ix,]
-    Y_test = Y_val[np.newaxis,ix,]   
+ 
     test_pred_raw = model.predict(X_test)
 
     plt.figure(figsize=(10,10))
@@ -50,7 +48,6 @@ def log_image(epoch, logs):
     
     #plt.tight_layout()
     # Log the confusion matrix as an image summary.
-
     # Use the model to predict the values from the training dataset.
     test_pred_raw_train = model.predict(X_train_test)    
     plt.subplot(2,5,6)
