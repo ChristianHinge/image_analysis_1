@@ -152,8 +152,8 @@ csv_logger = CSVLogger(cwd + '/training.log')
 BS = 2
 STEPS_PER_EPOCH = np.floor (len(train_IDs) / BS)
 SAVE_MODEL_EPOCHS = 10
-DECAY_LR_EPOCHS = 80
-decay_steps = int(DECAY_LR_EPOCHS * STEPS_PER_EPOCH)
+#DECAY_LR_EPOCHS = 80
+#decay_steps = int(DECAY_LR_EPOCHS * STEPS_PER_EPOCH)
 
 
 cp_callback = tf.keras.callbacks.ModelCheckpoint(
@@ -163,7 +163,7 @@ cp_callback = tf.keras.callbacks.ModelCheckpoint(
 
 
 #define model
-unet = Unet(512,512,2,32,decay_steps)
+unet = Unet(512,512,2,32)
 Unet_model = unet.Unet_model
 
 

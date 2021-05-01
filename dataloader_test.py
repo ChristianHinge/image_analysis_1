@@ -245,8 +245,8 @@ def preprocess(pt,sl,data_dir = "data/normalized"):
 
 
 def normalize1(im):
-    
-    im2 = (im-im.mean())/np.std(im)
+    im2 = im / 255
+    #im2 = (im-im.mean())/np.std(im)
     return im2
 
 def normalize2(im2):

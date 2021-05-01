@@ -56,7 +56,7 @@ from keras import backend as K
 
 
 class Unet():
-    def __init__(self,X_dim,Y_dim,n_channels,gf,decay_steps=1000000):
+    def __init__(self,X_dim,Y_dim,n_channels,gf,decay_steps=100000000):
         # Input shape
         self.img_rows = X_dim
         self.img_cols = Y_dim
@@ -95,7 +95,7 @@ class Unet():
             if dropout_rate:
                 d = Dropout(dropout_rate)(d)
             if bn:
-                d = BatchNormalization(momentum=0.8)(d)
+                d = BatchNormalization(momentum=0.9)(d)
             return d
 
         def deconv2d(layer_input, skip_input, filters, f_size=4, dropout_rate=0):
@@ -104,7 +104,7 @@ class Unet():
             u = Conv2D(filters, kernel_size=f_size, strides=1, padding='same', activation='relu',kernel_initializer=initializer,use_bias=True)(u)
             if dropout_rate:
                 u = Dropout(dropout_rate)(u)
-            u = BatchNormalization(momentum=0.8)(u)
+            u = BatchNormalization(momentum=0.9)(u)
             u = Concatenate()([u, skip_input])
             return u
 
@@ -136,14 +136,14 @@ class Unet():
         # Downsampling
         d1 = conv2d(d0, self.gf, bn=False)
         d2 = conv2d(d1, self.gf*2, dropout_rate=0.2)
-        d3 = conv2d(d2, self.gf*4, dropout_rate=0.3)
-        d4 = conv2d(d3, self.gf*8, dropout_rate=0.4)
-        d5 = conv2d(d4, self.gf*8, dropout_rate=0.5)
+        d3 = conv2d(d2, self.gf*4, dropout_rate=0.2)
+        d4 = conv2d(d3, self.gf*8, dropout_rate=0.2)
+        d5 = conv2d(d4, self.gf*8, dropout_rate=0.2)
 
         # Upsampling
-        u3 = deconv2d(d5, d4, self.gf*8, dropout_rate=0.5)
-        u4 = deconv2d(u3, d3, self.gf*4, dropout_rate=0.4)
-        u5 = deconv2d(u4, d2, self.gf*2, dropout_rate=0.3)
+        u3 = deconv2d(d5, d4, self.gf*8, dropout_rate=0.2)
+        u4 = deconv2d(u3, d3, self.gf*4, dropout_rate=0.2)
+        u5 = deconv2d(u4, d2, self.gf*2, dropout_rate=0.2)
         u6 = deconv2d(u5, d1, self.gf, dropout_rate=0.2)
 
         u7 = UpSampling2D(size=2)(u6)

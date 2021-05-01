@@ -32,10 +32,76 @@ print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('
 
 slice_ID = "pt_094_sl_23"
 
-unet_model_path = "checkpoints/first low LR model/model_120.hdf5"
+data_dir = "data/normalized"
+
+
+
+unet_model_path = "checkpoints/0.1_step_decay_LR/model_120.hdf5"
+swap = True 
 
 classification_model_path = "checkpoints/first low LR model/model_120.hdf5"
 
 
 
+#%% load patient data 
+
+pt = slice_ID.split("_")[1]
+sl = slice_ID.split("_")[3]
+
+# Load bone and brain slice
+if swap:
+    im_bone  = np.load(data_dir + f"/{pt}/brain/{sl}.npy")
+    im_brain = np.load(data_dir + f"/{pt}/bone/{sl}.npy")
+    im_seg = np.load(data_dir + f"/{pt}/seg/{sl}.npy")
+else:
+    im_bone  = np.load(data_dir + f"/{pt}/bone/{sl}.npy")
+    im_brain = np.load(data_dir + f"/{pt}/brain/{sl}.npy")
+    im_seg = np.load(data_dir + f"/{pt}/seg/{sl}.npy")   
+    
+    
+X_infer = np.zeros((1,512,512,2))
+Y_seg_true = np.zeros((1,512,512))
+
+X_infer[0,:,:,0] = im_bone
+X_infer[0,:,:,1] = im_brain
+Y_seg_true = im_seg
+
+#%%
+
+
+##### UNET PREDICTION #######
+BS = 2
+
+Unet_model = load_model(unet_model_path)
+
+Y_seg_pred = np.round(Unet_model.predict(X_infer,batch_size=BS).squeeze())
+
+#%%
+
+plt.figure(figsize=(10,6))
+plt.subplot(1,2,1)
+
+if swap:
+    plt.imshow(X_infer[0,:,:,0])
+else:
+    plt.imshow(X_infer[0,:,:,1])
+
+plt.subplot(1,2,2)
+plt.imshow(Y_seg_pred[:,:])
+
+
+#%%
+
+##### CLASSIFICATION PREDICTION ######
+# X_class = np.zeros((1,512,512,3))
+# X_class[0,:,:,:2] = X_infer
+# X_class[0,:,:,2] = Y_seg_pred
+
+# classification_model = load_model(classification_model_path)
+
+# Y_class_pred = classification_model.predict(X_class,batch_size=BS)
+
+
+
+#%% diagnose plot 
 

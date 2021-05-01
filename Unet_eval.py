@@ -29,9 +29,9 @@ print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('
 
 #%%
 
-#model_path = "checkpoints/model_120.hdf5"
+model_path = "checkpoints/01_norm_model/model_120.hdf5"
 #model_path = "Final_model"
-model_path = "checkpoints/first low LR model/model_120.hdf5"
+#model_path = "checkpoints/first low LR model/model_120.hdf5"
 #model_path = "checkpoints/0.1_step_decay_LR/model_120.hdf5"
 
 train_IDs, val_IDs, test_IDs, d_train, X_val, Y_val, X_val_test, Y_val_test, X_train_test, Y_train_test, X_test, Y_test = load_train_val_data()
@@ -96,12 +96,12 @@ Y_eval_pred = np.round(Unet_model.predict(X_eval,batch_size=BS).squeeze())
 
 
 #plot some predictions from the whole evaluation set
-idx = 22
+idx = 23
 
 plt.subplot(2,3,4)
-plt.imshow(X_test[idx,:,:,1])
+plt.imshow(X_eval[idx,:,:,1])
 plt.subplot(2,3,5)
-plt.imshow(Y_test[idx,:,:])
+plt.imshow(Y_eval_true[idx,:,:])
 plt.subplot(2,3,6)
 plt.imshow(Y_eval_pred[idx,:,:])
 
