@@ -1,4 +1,5 @@
-# CLASSIFICATION
+#!/usr/bin/env python3
+from tensorflow import keras
 
 
 import numpy as np
@@ -6,19 +7,16 @@ from matplotlib import pyplot as plt
 import wandb
 from wandb.keras import WandbCallback
 import random
-from dataloader_test import DataLoaderClassification, IDs, preprocess, load_train_val_data_classifier
+from dataloader_test import DataLoaderClassification, preprocess, load_train_val_data_classifier
 from data_split import get_data_split_IDs
 from test2 import AUG
 import tensorflow as tf
-
-
 from keras.models import Sequential
 from keras.layers import Dense, Conv2D, MaxPool2D , Flatten
 from keras.preprocessing.image import ImageDataGenerator
 from keras.optimizers import Adam
 #%% Load data
 
-checkpoint_dir = "checkpoints/model_{epoch:02d}.hdf5"
 
 diagnosis = ["Intraventricular","Intraparenchymal","Subarachnoid","Epidural","Subdural","No_Hemorrhage"]
 diagnosis_dict = {i:x for x,i in zip(diagnosis,range(len(diagnosis)))}
@@ -67,9 +65,8 @@ def log_image(epoch, logs):
     plt.tight_layout()
     #plt.show()
     print(s)
+    #import time
     wandb.log({"im": plt})
-
-
 
 #VGG 16 with some modifications
 model = Sequential()
@@ -78,50 +75,49 @@ model = Sequential()
 model.add(Conv2D(input_shape=(512,512,3),filters=64,kernel_size=(3,3),padding="same", activation="relu"))
 model.add(MaxPool2D(pool_size=(2,2),strides=(2,2)))
 model.add(Conv2D(filters=64,kernel_size=(3,3),padding="same", activation="relu"))
-model.add(MaxPool2D(pool_size=(2,2),strides=(2,2)))
+model.add(Conv2D(filters=64,kernel_size=(3,3),padding="same", activation="relu"))
 model.add(Conv2D(filters=64,kernel_size=(3,3),padding="same", activation="relu"))
 model.add(MaxPool2D(pool_size=(2,2),strides=(2,2)))
-model.add(Conv2D(filters=128, kernel_size=(3,3), padding="same", activation="relu"))
-model.add(Conv2D(filters=128, kernel_size=(3,3), padding="same", activation="relu"))
+model.add(Conv2D(filters=64,kernel_size=(3,3),padding="same", activation="relu"))
+model.add(Conv2D(filters=64,kernel_size=(3,3),padding="same", activation="relu"))
+model.add(Conv2D(filters=64,kernel_size=(3,3),padding="same", activation="relu"))
 model.add(MaxPool2D(pool_size=(2,2),strides=(2,2)))
-model.add(Conv2D(filters=256, kernel_size=(3,3), padding="same", activation="relu"))
-model.add(Conv2D(filters=256, kernel_size=(3,3), padding="same", activation="relu"))
+model.add(Conv2D(filters=64,kernel_size=(3,3),padding="same", activation="relu"))
+model.add(Conv2D(filters=64,kernel_size=(3,3),padding="same", activation="relu"))
+model.add(Conv2D(filters=64,kernel_size=(3,3),padding="same", activation="relu"))
 model.add(MaxPool2D(pool_size=(2,2),strides=(2,2)))
-model.add(Conv2D(filters=512, kernel_size=(3,3), padding="same", activation="relu"))
-model.add(Conv2D(filters=512, kernel_size=(3,3), padding="same", activation="relu"))
-model.add(MaxPool2D(pool_size=(2,2),strides=(2,2)))
-model.add(Conv2D(filters=512, kernel_size=(3,3), padding="same", activation="relu"))
-model.add(Conv2D(filters=512, kernel_size=(3,3), padding="same", activation="relu"))
+model.add(Conv2D(filters=64,kernel_size=(3,3),padding="same", activation="relu"))
+model.add(Conv2D(filters=64,kernel_size=(3,3),padding="same", activation="relu"))
+model.add(Conv2D(filters=64,kernel_size=(3,3),padding="same", activation="relu"))
 model.add(MaxPool2D(pool_size=(2,2),strides=(2,2)))
 model.add(Flatten())
 model.add(Dense(units=2048,activation="relu"))
 model.add(Dense(units=2048,activation="relu"))
 model.add(Dense(units=6, activation="sigmoid"))
-
-opt = Adam(lr=0.0005)
-model.compile(optimizer=opt, loss='binary_crossentropy', metrics=['accuracy'])
-
-
-#Create a callback that saves the model's weights every 10 epochs
-BS = 2
-STEPS_PER_EPOCH = np.floor (len(train_IDs) / BS)
-SAVE_MODEL_EPOCHS = 10
-
-cp_callback = tf.keras.callbacks.ModelCheckpoint(
-    filepath=checkpoint_dir,
-    save_freq= int(SAVE_MODEL_EPOCHS * STEPS_PER_EPOCH))
-
-
+opt = keras.optimizers.Adam(learning_rate=0.0001)
+model.compile(optimizer="adam", loss='binary_crossentropy',metrics=["accuracy"])
+import keras
 #set up wandb
 with open("wandb.key" , "r") as handle:
     wandb_key = handle.readlines()[0]
 
-#wandb_key = "a631abc6ca522c1ebcef41520d0759e0841b8bed"
 wandb.login(key=wandb_key)
 
 wandb.init(project='vgg', entity='keras_krigere')
-from tensorflow import keras
+#from tensorflow import keras
 image_callback = keras.callbacks.LambdaCallback(on_epoch_end=log_image)
- 
+
+EPOCHS = 1
+checkpoint_filepath = "checkpoints/1model_{epoch:02d}.hdf5"
+
+model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+    filepath=checkpoint_filepath,
+    save_weights_only=True,
+    monitor='val_accuracy',
+    mode='max',
+    save_best_only=True)
+    
 #model.fit(batch_size=100,validation_data= testdata, validation_steps=10,epochs=100,callbacks=[checkpoint,early])
-model.fit(d_train, batch_size = 2, epochs=150, callbacks = [image_callback, WandbCallback(), cp_callback], validation_data=(X_val,Y_val), validation_batch_size = 2)
+model.fit(d_train,validation_data = (X_val,Y_val),callbacks=[image_callback,WandbCallback(),model_checkpoint_callback],validation_batch_size=2,batch_size=2,epochs=100)
+
+#model.fit(d_train,batch_size=10, epochs=150)
