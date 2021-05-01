@@ -72,8 +72,8 @@ class DataLoader(Sequence):
             im_bone  = np.load(self.data_dir + f"/{pt}/bone/{sl}.npy")
             im_brain = np.load(self.data_dir + f"/{pt}/brain/{sl}.npy")
 
-            X[i,:,:,0] = im_bone
-            X[i,:,:,1] = im_brain
+            X[i,:,:,1] = im_bone
+            X[i,:,:,0] = im_brain
 
             # Load segmentation mask if training
             if load_Y:
@@ -98,7 +98,7 @@ class DataLoader(Sequence):
 class DataLoaderClassification(Sequence):
 
     def __init__(self,list_IDs,to_fit=True, 
-    batch_size=32, dim=(512,512),n_channels=3,n_classes=6,shuffle=True,augmentation = None):
+    batch_size=32, dim=(512,512),n_channels=3,n_classes=6,shuffle=True,augmentation = None,data_dir="data/normalized"):
 
         #Create the dataloader
         self.list_IDs = list_IDs #list of patient IDs (1,2,3,4,5,...)
@@ -109,7 +109,7 @@ class DataLoaderClassification(Sequence):
         self.n_classes = n_classes #Number of classes in segmentation, 6: intraventricular, intraparenchymal, subarachnoid, epidural, subdural, no hemorrhage
         self.shuffle = shuffle #Randomize the order of the dataset
         self.augmentation = augmentation #Augmentation function used when training
-        self.data_dir = "data/normalized" #Data directory
+        self.data_dir = data_dir #Data directory
         self.on_epoch_end()
 
         hem_data = []                # load hemorrhage diagnosis data
@@ -201,13 +201,13 @@ class DataLoaderClassification(Sequence):
 
 #%%
 
-def preprocess(pt,sl):
+def preprocess(pt,sl,data_dir = "data/normalized"):
     """
     preprocessing
     """
 
     data_dir = "data/Patients_CT"
-    out_dir = "data/normalized"
+    out_dir = data_dir
 
     im_bone = np.array(Image.open(data_dir + f"/{pt}/bone/{sl}.jpg"))
     im_brain = np.array(Image.open(data_dir + f"/{pt}/brain/{sl}.jpg"))
@@ -245,13 +245,11 @@ def preprocess(pt,sl):
 
 
 def normalize1(im):
-    im2 = im / 255
-    # im2 = (im-im.mean())/np.std(im)
+    im2 = (im-im.mean())/np.std(im)
     return im2
 
 def normalize2(im2):
     im2 = im2 > 100
-    # im2 = im2 != 0
     return im2
 
 
