@@ -69,11 +69,11 @@ class DataLoader(Sequence):
             sl = ID.split("_")[3]
 
              # Load bone and brain slice
-            im_bone  = np.load(self.data_dir + f"/{pt}/brain/{sl}.npy")
-            im_brain = np.load(self.data_dir + f"/{pt}/bone/{sl}.npy")
+            im_bone  = np.load(self.data_dir + f"/{pt}/bone/{sl}.npy")
+            im_brain = np.load(self.data_dir + f"/{pt}/brain/{sl}.npy")
 
-            X[i,:,:,1] = im_bone
-            X[i,:,:,0] = im_brain
+            X[i,:,:,0] = im_bone
+            X[i,:,:,1] = im_brain
 
             # Load segmentation mask if training
             if load_Y:
@@ -170,8 +170,8 @@ class DataLoaderClassification(Sequence):
             sl = ID.split("_")[3]
 
              # Load bone and brain slice
-            im_bone  = np.load(self.data_dir + f"/{pt}/brain/{sl}.npy")
-            im_brain = np.load(self.data_dir + f"/{pt}/bone/{sl}.npy")
+            im_bone  = np.load(self.data_dir + f"/{pt}/bone/{sl}.npy")
+            im_brain = np.load(self.data_dir + f"/{pt}/brain/{sl}.npy")
             im_seg = np.load(self.data_dir + f"/{pt}/seg/{sl}.npy")
             
             X[i,:,:,0] = im_bone
@@ -205,10 +205,10 @@ def preprocess(pt,sl,data_dir = "data/normalized"):
     """
     preprocessing
     """
-
-    data_dir = "data/Patients_CT"
     out_dir = data_dir
-
+    
+    data_dir = "data/Patients_CT"
+    
     im_bone = np.array(Image.open(data_dir + f"/{pt}/bone/{sl}.jpg"))
     im_brain = np.array(Image.open(data_dir + f"/{pt}/brain/{sl}.jpg"))
     seg_path = data_dir + f"/{pt}/brain/{sl}_HGE_Seg.jpg"
@@ -245,15 +245,13 @@ def preprocess(pt,sl,data_dir = "data/normalized"):
 
 
 def normalize1(im):
-
+    
     im2 = (im-im.mean())/np.std(im)
     return im2
 
 def normalize2(im2):
-    #im2 = im2 > 100
-
-    im2 = im2 != 0
-
+    
+    im2 = im2 > 100
     return im2
 
 

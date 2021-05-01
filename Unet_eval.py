@@ -53,8 +53,8 @@ for i, ID in enumerate(eval_IDs):
     sl = ID.split("_")[3]
 
       # Load bone and brain slice
-    im_bone  = np.load(data_dir + f"/{pt}/brain/{sl}.npy")
-    im_brain = np.load(data_dir + f"/{pt}/bone/{sl}.npy")
+    im_bone  = np.load(data_dir + f"/{pt}/bone/{sl}.npy")
+    im_brain = np.load(data_dir + f"/{pt}/brain/{sl}.npy")
     im_seg = np.load(data_dir + f"/{pt}/seg/{sl}.npy")
     
     X_eval_imgs[i,:,:,0] = im_bone
@@ -84,15 +84,18 @@ for ii,ID in enumerate(eval_IDs):
 X_eval_imgs_hem = X_eval_imgs[eval_IDs_hem_bool,:,:,:]
 Y_eval_imgs_hem = Y_eval_imgs[eval_IDs_hem_bool,:,:]
 
-#%% 
+
+#%% load model and make prediction 
+ 
 BS = 2
 
-#load model and make prediction 
 Unet_model = load_model(model_path)
 
 #Y_eval_pred_imgs = np.round(Unet_model.predict(X_eval_imgs,batch_size=BS).squeeze())
 Y_eval_pred = np.round(Unet_model.predict(X_eval,batch_size=BS).squeeze())
 
+
+#plot some predictions from the whole evaluation set
 idx = 22
 
 plt.subplot(2,3,4)
@@ -103,7 +106,7 @@ plt.subplot(2,3,6)
 plt.imshow(Y_eval_pred[idx,:,:])
 
 
-#%% ONLY hemorrhage slices from validation
+#%% make predictions on ONLY hemorrhage slices from evaluation set
 
 BS = 2
 
@@ -111,7 +114,8 @@ Y_eval_pred_hem = np.round(Unet_model.predict(X_eval_imgs_hem,batch_size=BS).squ
 
 Y_eval_true_hem = Y_eval_imgs_hem
 
-#%%
+
+#plot some predictions from ONLY hemorrhage images in evaluation set
 idx = 7
 
 plt.figure(figsize=(10,6))
@@ -162,6 +166,7 @@ def IoU_coef(y_true, y_pred,smooth=1):
     return (intersection + smooth) / (union + smooth)
 
 
+#%% Compute metrics for whole evaluation set
 
 DSC = []
 IoU = []
@@ -189,7 +194,7 @@ print('Mean Dice: {0}'.format(np.array(DSC).mean()))
 print('Mean IoU: {0}'.format(np.array(IoU).mean()))
 
 
-#%%
+#%% Compute metrics for ONLY hemorrhage part of evaluation set
 
 DSC_hem = []
 IoU_hem = []
@@ -214,27 +219,6 @@ for b in range(int(Y_eval_true_hem.shape[0]/BS)):
 
 print('Mean Dice on hem: {0}'.format(np.array(DSC_hem).mean()))
 print('Mean IoU on hem: {0}'.format(np.array(IoU_hem).mean()))
-
-
-#%% testing if mean IOU from keras is the same 
-
-# a = Y_eval_true[20:40,:,:]
-# b = Y_eval_pred[20:40,:,:]
-
-# IOU_test = []
-
-# for ii in range(a.shape[0]):
-#     IoU_batch = IoU_coef(tf.convert_to_tensor(a[ii,:,:]), tf.convert_to_tensor(b[ii,:,:]))
-#     print(IoU_batch.numpy())
-#     IOU_test.append(IoU_batch.numpy())
-
-# print(np.array(IOU_test).mean())
-
-# m = tf.keras.metrics.MeanIoU(num_classes=2)
-# m.update_state(a, b)
-# c=m.result().numpy()
-# print(c)
-
 
 
 
