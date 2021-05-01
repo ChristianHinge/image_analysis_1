@@ -9,7 +9,6 @@ from tensorflow.keras.utils import Sequence
 import os
 import cv2
 import csv
-
 from data_split import get_data_split_IDs
 from test2 import AUG
 
@@ -98,16 +97,16 @@ class DataLoader(Sequence):
 class DataLoaderClassification(Sequence):
 
     def __init__(self,list_IDs,to_fit=True, 
-    batch_size=32, dim=(512,512),n_channels=3,n_classes=6,shuffle=True,augmentation = None,data_dir="data/normalized"):
+        batch_size=32, dim=(512,512),n_channels=3,n_classes=6,shuffle=True,augmentation = None,data_dir="data/normalized"):
 
         #Create the dataloader
-        self.list_IDs = list_IDs #list of patient IDs (1,2,3,4,5,...)
-        self.to_fit = to_fit     #True: dataloader used for training. False: dataloader used for test/val
-        self.batch_size = batch_size #Size of bateches
-        self.dim = dim    #Image dimension (650,650)
+        self.list_IDs = list_IDs     #list of patient IDs (1,2,3,4,5,...)
+        self.to_fit = to_fit         #True: dataloader used for training. False: dataloader used for test/val
+        self.batch_size = batch_size #Size of batches
+        self.dim = dim               #Image dimension (650,650)
         self.n_channels = n_channels #Channels, 2: Brain, Bone
-        self.n_classes = n_classes #Number of classes in segmentation, 6: intraventricular, intraparenchymal, subarachnoid, epidural, subdural, no hemorrhage
-        self.shuffle = shuffle #Randomize the order of the dataset
+        self.n_classes = n_classes   #Number of classes in segmentation, 6: intraventricular, intraparenchymal, subarachnoid, epidural, subdural, no hemorrhage
+        self.shuffle = shuffle       #Randomize the order of the dataset
         self.augmentation = augmentation #Augmentation function used when training
         self.data_dir = data_dir #Data directory
         self.on_epoch_end()
@@ -129,7 +128,7 @@ class DataLoaderClassification(Sequence):
         hem_data = hem_data[1:,:].astype(int)
         # we now have:
         # patient_ID, slice number, intraventricular, intraparenchymal, subarachnoid, epidural, subdural, no hemorrhage
-        
+
         # remove row 1098 - error
         hem_data = np.delete(hem_data,1098,0)
         
@@ -154,7 +153,6 @@ class DataLoaderClassification(Sequence):
         
         indexes = self.indexes[index*self.batch_size:(index+1)*self.batch_size]
         batch_IDs = [self.list_IDs[ix] for ix in indexes]
-
         return self._load_batch(batch_IDs,load_Y=self.to_fit)
 
     # Function to load a batch, (apply augmentation), and return the batch
@@ -197,8 +195,6 @@ class DataLoaderClassification(Sequence):
         else:
             # Return X if not training
             return X
-
-
 #%%
 
 def preprocess(pt,sl,data_dir = "data/normalized"):
@@ -206,9 +202,10 @@ def preprocess(pt,sl,data_dir = "data/normalized"):
     preprocessing
     """
     out_dir = data_dir
-    
     data_dir = "data/Patients_CT"
+
     
+
     im_bone = np.array(Image.open(data_dir + f"/{pt}/bone/{sl}.jpg"))
     im_brain = np.array(Image.open(data_dir + f"/{pt}/brain/{sl}.jpg"))
     seg_path = data_dir + f"/{pt}/brain/{sl}_HGE_Seg.jpg"
@@ -245,36 +242,29 @@ def preprocess(pt,sl,data_dir = "data/normalized"):
 
 
 def normalize1(im):
-    im2 = im / 255
     #im2 = (im-im.mean())/np.std(im)
-    return im2
+    im = im/255
+    return im
+
+
 
 def normalize2(im2):
     
     im2 = im2 > 100
     return im2
-
-
-
-#%%
-
-ixs = list(range(49,131))
-IDs = []
-
-for i, ix in enumerate(ixs):
-    f = f"data/Patients_CT/{ix:03d}/bone"
-    n_slices = len(os.listdir(f))
-    IDs.extend([f"pt_{ix:03d}_sl_{i}" for i in range(1,n_slices+1)])
-#%%""
 """
-for ID in IDs:
+#%%
+train_ids, val_ids, test_ids = get_data_split_IDs()
+
+
+for ID in train_ids + test_ids + val_ids:
     print(ID)
     pt = ID.split("_")[1]
     sl = ID.split("_")[3]
     preprocess(pt,sl)
-"""
-# %%
 
+# %%
+"""
 def load_train_val_data():
     #get training and validation data
     train_IDs, val_IDs, test_IDs = get_data_split_IDs()
@@ -329,8 +319,13 @@ def load_train_val_data():
 def load_train_val_data_classifier():
     #get training and validation data
     train_IDs, val_IDs, test_IDs = get_data_split_IDs()
+<<<<<<< HEAD
+    d_train = DataLoaderClassification(train_IDs,batch_size = 4, augmentation = None) #len(train_IDs[:10])
+    d_val = DataLoaderClassification(val_IDs, batch_size = len(val_IDs)) 
+=======
     d_train = DataLoaderClassification(train_IDs,batch_size = 2, augmentation = AUG) #len(train_IDs[:10])
     d_val = DataLoaderClassification(val_IDs, batch_size = len(val_IDs), shuffle=False) 
+>>>>>>> 5aec86455db91453c75904e4c911cd09b5d30166
     
     
     #get validation data
