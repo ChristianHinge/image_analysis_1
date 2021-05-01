@@ -41,12 +41,13 @@ print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('
 
 data_dir = "data/Patients_CT"
 norm_dir = "/data/normalized"
-checkpoint_dir = "checkpoints/model_{epoch:02d}.hdf5"
+checkpoint_dir = "checkpoints/model_{epoch:02d}"
+checkpoint_dir2 = "checkpoints/model_{epoch:02d}.hdf5"
 
 
 cwd = os.getcwd()
 
-#%% normalize
+#%% preprocess data 
 
 if not os.path.exists(cwd + norm_dir):
     for ID in IDs:
@@ -58,7 +59,7 @@ if not os.path.exists(cwd + norm_dir):
 
 #%%
 
-train_IDs, val_IDs, test_IDs, d_train, X_val, Y_val, X_test, Y_test, X_train_test, Y_train_test = load_train_val_data()
+train_IDs, val_IDs, test_IDs, d_train, X_val, Y_val, X_val_test, Y_val_test, X_train_test, Y_train_test, X_test, Y_test = load_train_val_data()
 
 
 #set up wandb
@@ -72,16 +73,16 @@ wandb.init(project='unet', entity='keras_krigere')
 # Define the per-epoch callbacks
 def log_image(epoch, logs):
     # Use the model to predict the values from the validation dataset.
-    test_pred_raw = Unet_model.predict(X_test)
+    test_pred_raw = Unet_model.predict(X_val_test)
     test_pred = np.round(test_pred_raw)
     
     plt.figure(figsize=(10,6))
     plt.subplot(2,5,1)
-    plt.imshow(X_test[0,:,:,0],cmap="gray")
+    plt.imshow(X_val_test[0,:,:,0],cmap="gray")
     plt.axis("off")
     plt.title("Brain")
     plt.subplot(2,5,2)
-    plt.imshow(X_test[0,:,:,1],cmap="gray")
+    plt.imshow(X_val_test[0,:,:,1],cmap="gray")
     plt.axis("off")
     plt.title("Bone")
     plt.subplot(2,5,3)
@@ -94,7 +95,7 @@ def log_image(epoch, logs):
     plt.axis("off")
     plt.title("Predicted segmentation mask")
     plt.subplot(2,5,5)
-    plt.imshow(Y_test[0,])
+    plt.imshow(Y_val_test[0,])
     plt.axis("off")
     plt.title("True")
     #plt.tight_layout()
@@ -152,13 +153,17 @@ csv_logger = CSVLogger(cwd + '/training.log')
 #Create a callback that saves the model's weights every 10 epochs
 BS = 2
 STEPS_PER_EPOCH = np.floor (len(train_IDs) / BS)
-SAVE_MODEL_EPOCHS = 10
+SAVE_MODEL_EPOCHS = 2
 DECAY_LR_EPOCHS = 80
 decay_steps = int(DECAY_LR_EPOCHS * STEPS_PER_EPOCH)
 
 
 cp_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_dir,
+    save_freq= int(SAVE_MODEL_EPOCHS * STEPS_PER_EPOCH))
+
+cp_callback2 = tf.keras.callbacks.ModelCheckpoint(
+    filepath=checkpoint_dir2,
     save_freq= int(SAVE_MODEL_EPOCHS * STEPS_PER_EPOCH))
 
 
@@ -169,9 +174,9 @@ Unet_model = unet.Unet_model
 
 
 #train model
-Unet_model.fit(d_train, batch_size = BS, epochs=120, callbacks = [image_callback, WandbCallback(), csv_logger, cp_callback, LR_callback], validation_data=(X_val,Y_val), validation_batch_size = BS)
+Unet_model.fit(d_train, batch_size = BS, epochs=120, callbacks = [image_callback, WandbCallback(), csv_logger, cp_callback, cp_callback2, LR_callback], validation_data=(X_val,Y_val), validation_batch_size = BS)
 
-#Unet_model.save('checkpoints')
+Unet_model.save('Final_model')
 
 
 

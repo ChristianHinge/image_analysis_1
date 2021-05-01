@@ -125,10 +125,14 @@ class DataLoaderClassification(Sequence):
 
         # remove fracture data (last column)
         hem_data = np.delete(hem_data,cols-1,1)
+        # remove labels
         hem_data = hem_data[1:,:].astype(int)
         # we now have:
         # patient_ID, slice number, intraventricular, intraparenchymal, subarachnoid, epidural, subdural, no hemorrhage
-
+        
+        # remove row 1098 - error
+        hem_data = np.delete(hem_data,1098,0)
+        
         # update shape
         rows, cols = hem_data.shape
         self.hem_data = hem_data
@@ -218,8 +222,8 @@ def preprocess(pt,sl):
     im_bone = cv2.resize(im_bone, (512,512), interpolation = cv2.INTER_CUBIC)
     im_brain = cv2.resize(im_brain, (512,512), interpolation = cv2.INTER_CUBIC)
 
-    path1 = out_dir+f"/{pt}/brain/"
-    path2 = out_dir+f"/{pt}/bone/"
+    path1 = out_dir+f"/{pt}/bone/"
+    path2 = out_dir+f"/{pt}/brain/"
     path3 = out_dir+f"/{pt}/seg/"
 
     if not os.path.exists(path1):
@@ -239,13 +243,15 @@ def preprocess(pt,sl):
     np.save(path2+f"{sl}.npy",im2)
     np.save(path3+f"{sl}.npy",seg)
 
+
 def normalize1(im):
     im2 = im / 255
-    #im2 = (im-im.mean())/np.std(im)
+    # im2 = (im-im.mean())/np.std(im)
     return im2
 
 def normalize2(im2):
     im2 = im2 > 100
+    # im2 = im2 != 0
     return im2
 
 
@@ -272,12 +278,15 @@ for ID in IDs:
 def load_train_val_data():
     #get training and validation data
     train_IDs, val_IDs, test_IDs = get_data_split_IDs()
-    d_train = DataLoader(train_IDs,batch_size = 2, augmentation = AUG) #len(train_IDs[:10])
+    d_train = DataLoader(train_IDs,batch_size = 2, augmentation = AUG)
     d_val = DataLoader(val_IDs, batch_size = len(val_IDs)) 
-    
+    d_test = DataLoader(test_IDs, batch_size = len(test_IDs))
     
     #get validation data
     X_val, Y_val = d_val[0]
+    
+    #get validation data
+    X_test, Y_test = d_test[0]
     
     #get a validation image with segmentation
     for i in range(0,len(Y_val)):
@@ -289,8 +298,8 @@ def load_train_val_data():
             break
     
     # save data for image slice with segmentation
-    X_test = X_val[np.newaxis,slice_show,]
-    Y_test = Y_val[np.newaxis,slice_show,]   
+    X_val_test = X_val[np.newaxis,slice_show,]
+    Y_val_test = Y_val[np.newaxis,slice_show,]   
     
     
     
@@ -314,7 +323,7 @@ def load_train_val_data():
     X_train_test = X_train[np.newaxis,slice_show,]
     Y_train_test = Y_train[np.newaxis,slice_show,] 
     
-    return train_IDs, val_IDs, test_IDs, d_train, X_val, Y_val, X_test, Y_test, X_train_test, Y_train_test
+    return train_IDs, val_IDs, test_IDs, d_train, X_val, Y_val, X_val_test, Y_val_test, X_train_test, Y_train_test, X_test, Y_test
 
 
 def load_train_val_data_classifier():

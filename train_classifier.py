@@ -6,17 +6,19 @@ from matplotlib import pyplot as plt
 import wandb
 from wandb.keras import WandbCallback
 import random
-from dataloader_test import DataLoaderClassification, IDs, preprocess
+from dataloader_test import DataLoaderClassification, IDs, preprocess, load_train_val_data_classifier
 from data_split import get_data_split_IDs
 from test2 import AUG
 import tensorflow as tf
-from train_unet import load_train_val_data_classifier
+
 
 from keras.models import Sequential
 from keras.layers import Dense, Conv2D, MaxPool2D , Flatten
 from keras.preprocessing.image import ImageDataGenerator
 from keras.optimizers import Adam
 #%% Load data
+
+checkpoint_dir = "checkpoints/model_{epoch:02d}.hdf5"
 
 diagnosis = ["Intraventricular","Intraparenchymal","Subarachnoid","Epidural","Subdural","No_Hemorrhage"]
 diagnosis_dict = {i:x for x,i in zip(diagnosis,range(len(diagnosis)))}
@@ -26,7 +28,7 @@ train_IDs, val_IDs, test_IDs, d_train, X_val, Y_val, X_test, Y_test, X_train_tes
 # Define the per-epoch callbacks
 def log_image(epoch, logs):
     # Use the model to predict the values from the validation dataset.
- 
+
     test_pred_raw = model.predict(X_test)
 
     plt.figure(figsize=(10,10))
@@ -96,14 +98,30 @@ model.add(Dense(units=2048,activation="relu"))
 model.add(Dense(units=2048,activation="relu"))
 model.add(Dense(units=6, activation="sigmoid"))
 
-opt = Adam(lr=0.001)
+opt = Adam(lr=0.0005)
 model.compile(optimizer=opt, loss='binary_crossentropy', metrics=['accuracy'])
 
-wandb_key = "a631abc6ca522c1ebcef41520d0759e0841b8bed"
+
+#Create a callback that saves the model's weights every 10 epochs
+BS = 2
+STEPS_PER_EPOCH = np.floor (len(train_IDs) / BS)
+SAVE_MODEL_EPOCHS = 10
+
+cp_callback = tf.keras.callbacks.ModelCheckpoint(
+    filepath=checkpoint_dir,
+    save_freq= int(SAVE_MODEL_EPOCHS * STEPS_PER_EPOCH))
+
+
+#set up wandb
+with open("wandb.key" , "r") as handle:
+    wandb_key = handle.readlines()[0]
+
+#wandb_key = "a631abc6ca522c1ebcef41520d0759e0841b8bed"
 wandb.login(key=wandb_key)
+
 wandb.init(project='vgg', entity='keras_krigere')
 from tensorflow import keras
 image_callback = keras.callbacks.LambdaCallback(on_epoch_end=log_image)
  
 #model.fit(batch_size=100,validation_data= testdata, validation_steps=10,epochs=100,callbacks=[checkpoint,early])
-model.fit(d_train, batch_size = 2, epochs=50, callbacks = [image_callback, WandbCallback()], validation_data=(X_val,Y_val), validation_batch_size = 2)
+model.fit(d_train, batch_size = 2, epochs=150, callbacks = [image_callback, WandbCallback(), cp_callback], validation_data=(X_val,Y_val), validation_batch_size = 2)

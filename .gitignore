@@ -16,6 +16,8 @@ __pycache__/
 build/
 develop-eggs/
 data/normalized/
+Final_model/
+data/normalized_znorm
 dist/
 downloads/
 eggs/
