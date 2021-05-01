@@ -71,8 +71,8 @@ class DataLoader(Sequence):
             im_bone  = np.load(self.data_dir + f"/{pt}/bone/{sl}.npy")
             im_brain = np.load(self.data_dir + f"/{pt}/brain/{sl}.npy")
 
-            X[i,:,:,1] = im_bone
-            X[i,:,:,0] = im_brain
+            X[i,:,:,0] = im_bone
+            X[i,:,:,1] = im_brain
 
             # Load segmentation mask if training
             if load_Y:
@@ -204,6 +204,8 @@ def preprocess(pt,sl,data_dir = "data/normalized"):
     out_dir = data_dir
     data_dir = "data/Patients_CT"
 
+    
+
     im_bone = np.array(Image.open(data_dir + f"/{pt}/bone/{sl}.jpg"))
     im_brain = np.array(Image.open(data_dir + f"/{pt}/brain/{sl}.jpg"))
     seg_path = data_dir + f"/{pt}/brain/{sl}_HGE_Seg.jpg"
@@ -240,11 +242,18 @@ def preprocess(pt,sl,data_dir = "data/normalized"):
 
 
 def normalize1(im):
+<<<<<<< HEAD
     #im2 = (im-im.mean())/np.std(im)
     im = im/255
     return im
+=======
+    
+    im2 = (im-im.mean())/np.std(im)
+    return im2
+>>>>>>> 5aec86455db91453c75904e4c911cd09b5d30166
 
 def normalize2(im2):
+    
     im2 = im2 > 100
     return im2
 """
@@ -264,8 +273,8 @@ def load_train_val_data():
     #get training and validation data
     train_IDs, val_IDs, test_IDs = get_data_split_IDs()
     d_train = DataLoader(train_IDs,batch_size = 2, augmentation = AUG)
-    d_val = DataLoader(val_IDs, batch_size = len(val_IDs)) 
-    d_test = DataLoader(test_IDs, batch_size = len(test_IDs))
+    d_val = DataLoader(val_IDs, batch_size = len(val_IDs), shuffle=False) 
+    d_test = DataLoader(test_IDs, batch_size = len(test_IDs), shuffle=False)
     
     #get validation data
     X_val, Y_val = d_val[0]
@@ -314,12 +323,18 @@ def load_train_val_data():
 def load_train_val_data_classifier():
     #get training and validation data
     train_IDs, val_IDs, test_IDs = get_data_split_IDs()
+<<<<<<< HEAD
     d_train = DataLoaderClassification(train_IDs,batch_size = 4, augmentation = None) #len(train_IDs[:10])
     d_val = DataLoaderClassification(val_IDs, batch_size = len(val_IDs)) 
+=======
+    d_train = DataLoaderClassification(train_IDs,batch_size = 2, augmentation = AUG) #len(train_IDs[:10])
+    d_val = DataLoaderClassification(val_IDs, batch_size = len(val_IDs), shuffle=False) 
+>>>>>>> 5aec86455db91453c75904e4c911cd09b5d30166
     
     
     #get validation data
     X_val, Y_val = d_val[0]
+    
     
     #get a validation image with segmentation
     for i in range(0,len(X_val)):
