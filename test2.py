@@ -9,12 +9,11 @@ import scipy
 from scipy import ndimage as nd
 
 
-
 #%% Augmentation
 
 # function cv2_clipped_zoom taken from:
 # https://stackoverflow.com/questions/37119071/scipy-rotate-and-zoom-an-image-without-changing-its-dimensions/37121993#37121993
-def cv2_clipped_scale(img, scale_x, scale_y):
+def cv2_clipped_scale(img, scale_x, scale_y, pad_value=0):
     """
     Center scale in/out of the given image and returning an enlarged/shrinked view of 
     the image without changing dimensions
@@ -41,14 +40,14 @@ def cv2_clipped_scale(img, scale_x, scale_y):
     pad_height1, pad_width1 = (height - resize_height) // 2, (width - resize_width) //2
     pad_height2, pad_width2 = (height - resize_height) - pad_height1, (width - resize_width) - pad_width1
     pad_spec = [(pad_height1, pad_height2), (pad_width1, pad_width2)] + [(0,0)] * (img.ndim - 2)
-
+    
     result = cv2.resize(cropped_img, (resize_width, resize_height))
-    result = np.pad(result, pad_spec, mode='constant')
+    result = np.pad(result, pad_spec, mode='constant',constant_values=(pad_value,pad_value))
     assert result.shape[0] == height and result.shape[1] == width
     return result
 
 
-def AUG(X,Y,angles = [-15,15],scales =[0.9,1.1]):
+def AUG(X,Y,angles = [-20,20],scales =[0.9,1.1]):
 
     # function can perform horizontal flip, rotation, scaling and normalization
     #
@@ -64,7 +63,10 @@ def AUG(X,Y,angles = [-15,15],scales =[0.9,1.1]):
 
     X_AUG = np.copy(X)
     Y_AUG = np.copy(Y)
-
+    
+    pad_value_bone = np.percentile(X_AUG[:,:,0],0.1)
+    pad_value_brain = np.percentile(X_AUG[:,:,1],0.1)
+    
     # flip (horizontal - xdim)
     flip = np.random.randint(2,size=1) # randomly select 0 or 1 (no flip or flip)
 
@@ -80,19 +82,22 @@ def AUG(X,Y,angles = [-15,15],scales =[0.9,1.1]):
     rows,cols = Y_AUG.shape
     M = cv2.getRotationMatrix2D((cols/2,rows/2),angle[0,0],1)
     Y_AUG = cv2.warpAffine(Y_AUG,M,(cols,rows)) # rotate mask
-    X_AUG[:,:,0] = cv2.warpAffine(X_AUG[:,:,0],M,(cols,rows)) # rotate bone
-    X_AUG[:,:,1] = cv2.warpAffine(X_AUG[:,:,1],M,(cols,rows)) # rotate brain
+    X_AUG[:,:,0] = cv2.warpAffine(X_AUG[:,:,0],M,(cols,rows), borderValue = pad_value_bone) # rotate bone
+    X_AUG[:,:,1] = cv2.warpAffine(X_AUG[:,:,1],M,(cols,rows), borderValue = pad_value_brain) # rotate brain
 
     # scale
     scale = np.random.uniform(low = scales[0], high = scales[1], size = [1,2])
     scale = scale.astype(np.float)
     # cv2_clipped_scale(image, scale_x, scale_y)
-    X_AUG[:,:,0] = cv2_clipped_scale(X_AUG[:,:,0], scale[0,0], scale[0,1])
-    X_AUG[:,:,1] = cv2_clipped_scale(X_AUG[:,:,1], scale[0,0], scale[0,1])
+    X_AUG[:,:,0] = cv2_clipped_scale(X_AUG[:,:,0], scale[0,0], scale[0,1], pad_value=pad_value_bone)
+    X_AUG[:,:,1] = cv2_clipped_scale(X_AUG[:,:,1], scale[0,0], scale[0,1], pad_value=pad_value_brain)
     Y_AUG = cv2_clipped_scale(Y_AUG, scale[0,0], scale[0,1])
     
     # elastic transform
     # albumentations.augmentations.geometric.transforms.ElasticTransform (alpha=1, sigma=50, alpha_affine=50, interpolation=1, border_mode=4, value=None, mask_value=None, always_apply=False, approximate=False, p=0.5)
 
     return X_AUG, Y_AUG
+
+
+
 

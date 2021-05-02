@@ -2,7 +2,8 @@
 wandb/
 .vscode/
 checkpoints/
-
+checkpoint/
+data/Patients_CT
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
