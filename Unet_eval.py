@@ -28,9 +28,9 @@ print('Found GPU at: {}'.format(device_name))
 print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
 
 #%%
-
+model_path = "checkpoints/model_90.hdf5"
 #model_path = "checkpoints/01_norm_model/model_120.hdf5"
-model_path = "Final_model"
+#model_path = "Final_model"
 #model_path = "checkpoints/first low LR model/model_120.hdf5"
 #model_path = "checkpoints/0.1_step_decay_LR/model_120.hdf5"
 
