@@ -29,8 +29,8 @@ print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('
 
 #%%
 
-model_path = "checkpoints/01_norm_model/model_120.hdf5"
-#model_path = "Final_model"
+#model_path = "checkpoints/01_norm_model/model_120.hdf5"
+model_path = "Final_model"
 #model_path = "checkpoints/first low LR model/model_120.hdf5"
 #model_path = "checkpoints/0.1_step_decay_LR/model_120.hdf5"
 
@@ -39,6 +39,19 @@ train_IDs, val_IDs, test_IDs, d_train, X_val, Y_val, X_val_test, Y_val_test, X_t
 eval_IDs = test_IDs
 X_eval = X_test
 Y_eval_true = Y_test
+
+# X_train, Y_train = d_train[0]
+
+# for ii in range(200):#len(d_train)-1):
+#     X_tmp, Y_tmp = d_train[ii]
+#     print(f"batch{ii}")
+#     X_train = np.concatenate((X_train,X_tmp),axis=0)
+#     Y_train = np.concatenate((Y_train,Y_tmp),axis=0)
+
+
+# eval_IDs = train_IDs[:X_train.shape[0]]
+# X_eval = X_train
+# Y_eval_true = Y_train
 
 
 #%%
@@ -114,13 +127,12 @@ Y_eval_pred_hem = np.round(Unet_model.predict(X_eval_imgs_hem,batch_size=BS).squ
 
 Y_eval_true_hem = Y_eval_imgs_hem
 
-
 #plot some predictions from ONLY hemorrhage images in evaluation set
 idx = 7
 
 plt.figure(figsize=(10,6))
 plt.subplot(1,3,1)
-plt.imshow(X_eval_imgs_hem[idx,:,:,0])
+plt.imshow(X_eval_imgs_hem[idx,:,:,1])
 plt.subplot(1,3,2)
 plt.imshow(Y_eval_true_hem[idx,:,:])
 plt.subplot(1,3,3)

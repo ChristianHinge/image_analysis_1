@@ -73,7 +73,7 @@ class Unet():
         
         # optimizer = Adam(learning_rate=lr_schedule)
         
-        optimizer = Adam(learning_rate=0.0001)
+        optimizer = Adam(0.0001,0.5)
         
         # Build the Unet
         self.Unet_model = self.build_Unet()
@@ -95,7 +95,14 @@ class Unet():
             if dropout_rate:
                 d = Dropout(dropout_rate)(d)
             if bn:
-                d = BatchNormalization(momentum=0.9)(d)
+                d = BatchNormalization(momentum=0.8)(d)      
+                
+            d = Conv2D(filters, kernel_size=f_size, strides=1, padding='same',kernel_initializer=initializer,use_bias=True)(d)
+            d = LeakyReLU(alpha=0.2)(d)
+            if dropout_rate:
+                d = Dropout(dropout_rate)(d)
+            if bn:
+                d = BatchNormalization(momentum=0.8)(d)
             return d
 
         def deconv2d(layer_input, skip_input, filters, f_size=4, dropout_rate=0):
@@ -104,13 +111,18 @@ class Unet():
             u = Conv2D(filters, kernel_size=f_size, strides=1, padding='same', activation='relu',kernel_initializer=initializer,use_bias=True)(u)
             if dropout_rate:
                 u = Dropout(dropout_rate)(u)
-            u = BatchNormalization(momentum=0.9)(u)
+            u = BatchNormalization(momentum=0.8)(u)
+            
+            u = Conv2D(filters, kernel_size=f_size, strides=1, padding='same',activation='relu',kernel_initializer=initializer,use_bias=True)(u)
+            if dropout_rate:
+                u = Dropout(dropout_rate)(u)
+            u = BatchNormalization(momentum=0.8)(u)
+            
             u = Concatenate()([u, skip_input])
             return u
 
         # Image input
         d0 = Input(shape=self.img_shape)
-
 
         # # Downsampling
         # d1 = conv2d(d0, self.gf, bn=False)
@@ -136,14 +148,14 @@ class Unet():
         # Downsampling
         d1 = conv2d(d0, self.gf, bn=False)
         d2 = conv2d(d1, self.gf*2, dropout_rate=0.2)
-        d3 = conv2d(d2, self.gf*4, dropout_rate=0.2)
-        d4 = conv2d(d3, self.gf*8, dropout_rate=0.2)
-        d5 = conv2d(d4, self.gf*8, dropout_rate=0.2)
+        d3 = conv2d(d2, self.gf*4, dropout_rate=0.3)
+        d4 = conv2d(d3, self.gf*8, dropout_rate=0.4)
+        d5 = conv2d(d4, self.gf*8, dropout_rate=0.5)
 
         # Upsampling
-        u3 = deconv2d(d5, d4, self.gf*8, dropout_rate=0.2)
-        u4 = deconv2d(u3, d3, self.gf*4, dropout_rate=0.2)
-        u5 = deconv2d(u4, d2, self.gf*2, dropout_rate=0.2)
+        u3 = deconv2d(d5, d4, self.gf*8, dropout_rate=0.5)
+        u4 = deconv2d(u3, d3, self.gf*4, dropout_rate=0.4)
+        u5 = deconv2d(u4, d2, self.gf*2, dropout_rate=0.3)
         u6 = deconv2d(u5, d1, self.gf, dropout_rate=0.2)
 
         u7 = UpSampling2D(size=2)(u6)

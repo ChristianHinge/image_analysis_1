@@ -196,6 +196,14 @@ class DataLoaderClassification(Sequence):
             # Return X if not training
             return X
 #%%
+ixs = list(range(49,131))
+IDs = []
+
+for i, ix in enumerate(ixs):
+    f = f"data/Patients_CT/{ix:03d}/bone"
+    n_slices = len(os.listdir(f))
+    IDs.extend([f"pt_{ix:03d}_sl_{i}" for i in range(1,n_slices+1)])
+#%%
 
 def preprocess(pt,sl,data_dir = "data/normalized"):
     """
@@ -247,7 +255,6 @@ def normalize1(im):
     return im
 
 
-
 def normalize2(im2):
     
     im2 = im2 > 100
@@ -269,7 +276,7 @@ def load_train_val_data():
     #get training and validation data
     train_IDs, val_IDs, test_IDs = get_data_split_IDs()
     d_train = DataLoader(train_IDs,batch_size = 2, augmentation = AUG)
-    d_val = DataLoader(val_IDs, batch_size = len(val_IDs), shuffle=False) 
+    d_val = DataLoader(val_IDs, batch_size = len(val_IDs)) 
     d_test = DataLoader(test_IDs, batch_size = len(test_IDs), shuffle=False)
     
     #get validation data
@@ -319,13 +326,13 @@ def load_train_val_data():
 def load_train_val_data_classifier():
     #get training and validation data
     train_IDs, val_IDs, test_IDs = get_data_split_IDs()
-<<<<<<< HEAD
+# <<<<<<< HEAD
     d_train = DataLoaderClassification(train_IDs,batch_size = 4, augmentation = None) #len(train_IDs[:10])
     d_val = DataLoaderClassification(val_IDs, batch_size = len(val_IDs)) 
-=======
-    d_train = DataLoaderClassification(train_IDs,batch_size = 2, augmentation = AUG) #len(train_IDs[:10])
-    d_val = DataLoaderClassification(val_IDs, batch_size = len(val_IDs), shuffle=False) 
->>>>>>> 5aec86455db91453c75904e4c911cd09b5d30166
+# =======
+#     d_train = DataLoaderClassification(train_IDs,batch_size = 2, augmentation = AUG) #len(train_IDs[:10])
+#     d_val = DataLoaderClassification(val_IDs, batch_size = len(val_IDs), shuffle=False) 
+# >>>>>>> 5aec86455db91453c75904e4c911cd09b5d30166
     
     
     #get validation data

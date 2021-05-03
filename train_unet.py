@@ -134,7 +134,9 @@ def log_image(epoch, logs):
 def scheduler(epoch, lr):
     print(lr)
     if epoch == 80:
-      return lr * 0.1
+        return lr * 0.5
+    elif epoch == 100:
+        return lr * 0.5
     else:
       return lr
 
